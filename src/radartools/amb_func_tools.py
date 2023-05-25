@@ -11,6 +11,7 @@ last revised: xx/xx/2007
 import sys
 import os.path
 import tables
+import numpy as np
 import scipy, scipy.fftpack
 import scipy.io
 import glob
@@ -663,14 +664,15 @@ def alt_code_phaserr(codeset, baud, h, lags):
 
 # alt_code_fraclag
 def alt_code_fraclag_old(codeset, baud, fraction, h, lags):
-    #
-    # computes an alternating code range-lag ambiguity function
-    #
-    # codeset - sign sequence for the alternating code (should be nbaud x nscans size)
-    # baud - baud length (microseconds)
-    # fraction - fractional lag
-    # h - impulse response function
-    # lags - lags that will be computed, in units of baud
+    """
+    computes an alternating code range-lag ambiguity function
+
+    codeset - sign sequence for the alternating code (should be nbaud x nscans size)
+    baud - baud length (microseconds)
+    fraction - fractional lag
+    h - impulse response function
+    lags - lags that will be computed, in units of baud
+    """
 
     [nbaud, scancount] = codeset.shape
 
@@ -789,18 +791,19 @@ def alt_code_fraclag_old(codeset, baud, fraction, h, lags):
 
 # alt_code_fraclag
 def alt_code_fraclag(codeset, baud, fraction, h, lags):
-    #
-    # computes an alternating code range-lag ambiguity function
-    #
-    # codeset - sign sequence for the alternating code (should be nbaud x nscans size)
-    # baud - baud length (microseconds)
-    # fraction - fractional lag
-    # h - impulse response function
-    # lags - lags that will be computed, in units of baud
+    """
+    computes an alternating code range-lag ambiguity function
+
+    codeset - sign sequence for the alternating code (should be nbaud x nscans size)
+    baud - baud length (microseconds)
+    fraction - fractional lag
+    h - impulse response function
+    lags - lags that will be computed, in units of baud
+    """
 
     [nbaud, scancount] = codeset.shape
 
-    newcodeset=scipy.zeros((codeset.shape[0]*fraction,codeset.shape[1]))
+    newcodeset = np.zeros((codeset.shape[0] * fraction, codeset.shape[1]))
     for aa in range(codeset.shape[0]):
         newcodeset[aa*fraction:aa*fraction+fraction,:]=codeset[aa,:]
 
@@ -1253,117 +1256,128 @@ def write_outputfile(fhandle,dict2do,keys2do=[],groupname='',name=''):
     
 # compute_lamb
 def compute_lamb(ltype,hfile,MCIC,in1,in2,outdir,lags=[]):
-    #
-    # desc
-    #
-    # ltype - pulse type (0=Long Pulse, 1=Alternating Code, 2=Alternating Code with phase errs, 3=Barker Code, 4=Fractional Lag Alternating Code)
-    # hfile - file name containing the impulse response function (time spacing should be one microsecond)
-    # lags - lags that will be computed, in units of baud (default is all)
-    # MCIC - length 2 list containing the decimation factors
-    #
-    # ltype-0:
-    #   in1 - number of samples per pulse
-    #   in2 - [sample time (microseconds), OPTIONAL phase file]
-    # ltype-1:
-    #   in1 - codeset
-    #   in2 - [baud length (microseconds)]
-    # ltype-2:
-    #   in1 - codeset
-    #   in2 - [baud length (microseconds)]
-    # ltype-3:
-    #   in1 - code length
-    #   in2 - [baud length (microseconds) oversampling factor]
-    # ltype-4:
-    #   in1 - code length
-    #   in2 - [baud length(microseconds) fraction]
-                
-    # get impulse response function
-    file=open(hfile,'r')
-    h=scipy.loadtxt(file)
-    file.close()
-    
+    """
+    desc: Computes the impulse response function
+
+    Input:
+    ltype - pulse type (0=Long Pulse, 1=Alternating Code,
+            2=Alternating Code with phase errs, 3=Barker Code,
+            4=Fractional Lag Alternating Code)
+    hfile - file name containing the impulse response function
+           (time spacing should be one microsecond)
+    lags - lags that will be computed, in units of baud (default is all)
+    MCIC - length 2 list containing the decimation factors
+
+    ltype-0:
+      in1 - number of samples per pulse
+      in2 - [sample time (microseconds), OPTIONAL phase file]
+    ltype-1:
+      in1 - codeset
+      in2 - [baud length (microseconds)]
+    ltype-2:
+      in1 - codeset
+      in2 - [baud length (microseconds)]
+    ltype-3:
+      in1 - code length
+      in2 - [baud length (microseconds) oversampling factor]
+    ltype-4:
+      in1 - code length
+      in2 - [baud length(microseconds) fraction]
+
+
+   """
+
+    with open(hfile, 'r') as fp:
+        h = np.loadtxt(fp)
+
     if len(MCIC)!=2:
         print ('MCIC must be length 2')
         sys.exit(-1)
     else:
-        dt=float(MCIC[0])*float(MCIC[1])/50.0
+        dt = float(MCIC[0]) * float(MCIC[1]) / 50.0
 
     out1=[]
     # Long Pulse
-    if ltype==0:
-        name1='nSamples'
-        name2=['SampleTime', 'PhaseFile']
-        typedesc='Long Pulse'
-        if len(lags)==0:
-            lags=range(in1)
+    if ltype == 0:
+        name1 = 'nSamples'
+        name2 = ['SampleTime', 'PhaseFile']
+        typedesc = 'Long Pulse'
+        if len(lags) == 0:
+            lags = list(range(in1))
         if len(in2) == 1:
             phFile = ''
         else: 
             phFile = in2[1]
-        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum, comp_all = long_pulse(in1, int(float(in2[0])/dt), h, lags, ph=phFile)
-        PulseLength=float(in1)*float(in2[0])
-        LagSp=int(float(in2[0])/dt)
+        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum, comp_all \
+                = long_pulse(in1, int(float(in2[0])/dt), h, lags, ph=phFile)
+        PulseLength = float(in1) * float(in2[0])
+        LagSp = int(float(in2[0]) / dt)
     # Alternating Code
     elif ltype==1:
-        name1='Codeset'
-        name2=['BaudLength']
+        name1 = 'Codeset'
+        name2 = ['BaudLength']
         typedesc='Alternating Code'
         if len(lags)==0:
-            lags=range(in1.shape[0])
+            lags = list(range(in1.shape[0]))
         if len(in2) == 1:
             phFile = ''
-        else: 
-            phFile = in2[1]            
-        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum,comp_all = alt_code(in1, int(float(in2[0])/dt), h, lags, ph=phFile)
-        PulseLength=float(in1.shape[0])*float(in2[0])
-        LagSp=int(float(in2[0])/dt)
+        else:
+            phFile = in2[1]
+        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum,comp_all \
+                = alt_code(in1, int(float(in2[0])/dt), h, lags, ph=phFile)
+        PulseLength = float(in1.shape[0]) * float(in2[0])
+        LagSp = int(float(in2[0]) / dt)
     # Alternating Code with Phase Errors
     elif ltype==2:
-        name1='Codeset'
-        name2=['BaudLength']
-        typedesc='Alternating Code with Coding Error'
-        if len(lags)==0:
-            lags=range(in1.shape[0])
-        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum, comp_all = alt_code_phaserr(in1, int(float(in2[0])/dt), h, lags)
+        name1 = 'Codeset'
+        name2 = ['BaudLength']
+        typedesc = 'Alternating Code with Coding Error'
+        if len(lags) == 0:
+            lags = list(range(in1.shape[0]))
+        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum, comp_all \
+                = alt_code_phaserr(in1, int(float(in2[0])/dt), h, lags)
         PulseLength=float(in1.shape[0])*float(in2[0])
         LagSp=int(float(in2[0])/dt)
     # Barker Code
     elif ltype==3:
-        name1='Length'
-        if len(in2)==2:
-            name2=['BaudLength', 'OversamplingFactor']
+        name1 = 'Length'
+        if len(in2) == 2:
+            name2 = ['BaudLength', 'OversamplingFactor']
             ctype=0
-        elif len(in2)==3:
-            name2=['BaudLength', 'OversamplingFactor', 'CodeType']
-            ctype=in2[2]
+        elif len(in2) == 3:
+            name2 = ['BaudLength', 'OversamplingFactor', 'CodeType']
+            ctype = in2[2]
         typedesc='Barker Code'
-        lags=[0]
-        Fs=0.5/dt*1.0e6
-        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum, comp_all, BWfilt, BW = barker_code(in1, int(float(in2[0])/dt), int(in2[1]), h, Fs, btype=ctype)
+        lags = [0]
+        Fs = 0.5 / dt*1.0e6
+        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum, comp_all, BWfilt, BW \
+                = barker_code(in1, int(float(in2[0])/dt), int(in2[1]), h, Fs, btype=ctype)
         PulseLength=float(in1)*float(in2[0])
         LagSp=int(float(in2[0])/dt)
         out1=[BWfilt,BW]
         nameOut1=['FilterBandwidth', 'Bandwidth']
     # Fractional Lag Alternating Code
     elif ltype==4:
-        name1='Codeset'
-        name2=['BaudLength','Fraction']
-        typedesc='Fractional Lag Alternating Code'
-        if len(lags)==0:
-            lags=range(in1.shape[0]*in2[1])
-        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum,comp_all,lags = alt_code_fraclag(in1, int(float(in2[0])/dt), in2[1], h, lags)
+        name1 = 'Codeset'
+        name2 = ['BaudLength','Fraction']
+        typedesc = 'Fractional Lag Alternating Code'
+        if len(lags) == 0:
+            lags = list(range(in1.shape[0]*in2[1]))
+        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum,comp_all,lags \
+                = alt_code_fraclag(in1, int(float(in2[0])/dt), in2[1], h, lags)
         PulseLength=float(in1.shape[0])*float(in2[0])
         LagSp=int(float(in2[0])/in2[1])
     # Fractional Lag Alternating Code
     elif ltype==44:
-        name1='Codeset'
-        name2=['BaudLength','Fraction']
-        typedesc='Fractional Lag Alternating Code'
-        if len(lags)==0:
-            lags=range(in1.shape[0]*in2[1])
-        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum,comp_all,lags = alt_code_fraclag_old(in1, int(float(in2[0])/dt), in2[1], h, lags)
-        PulseLength=float(in1.shape[0])*float(in2[0])
-        LagSp=int(float(in2[0])/dt/in2[1])
+        name1 = 'Codeset'
+        name2 = ['BaudLength','Fraction']
+        typedesc = 'Fractional Lag Alternating Code'
+        if len(lags) == 0:
+            lags = list(range(in1.shape[0]*in2[1]))
+        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum,comp_all,lags \
+                = alt_code_fraclag_old(in1, int(float(in2[0])/dt), in2[1], h, lags)
+        PulseLength = float(in1.shape[0]) * float(in2[0])
+        LagSp = int(float(in2[0]) / dt/in2[1])
         print (LagSp)
     # Coherent Code
     elif ltype==5:    
@@ -1376,7 +1390,8 @@ def compute_lamb(ltype,hfile,MCIC,in1,in2,outdir,lags=[]):
             ctype=in2[2]
         typedesc='Barker Code'
         lags=0
-        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum, comp_all, htotal = coh_code(in1, int(float(in2[0])/dt), int(in2[1]), h)
+        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum, comp_all, htotal \
+                = coh_code(in1, int(float(in2[0])/dt), int(in2[1]), h)
         PulseLength=float(in1.shape[0])*float(in2[0])
         LagSp=int(float(in2[0])/dt)
     # Multi pulse
@@ -1385,8 +1400,9 @@ def compute_lamb(ltype,hfile,MCIC,in1,in2,outdir,lags=[]):
         name2=['Baudlength', 'OversamplingFactor', 'Pattern']
         typedesc='MultiPulse'
         if len(lags)==0:
-            lags=range(in1.shape[0])    
-        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum, comp_all = mpulse(in1, in2[2], int(float(in2[0])/dt), int(in2[1]), h, lags)
+            lags = list(range(in1.shape[0]))
+        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum, comp_all \
+                = mpulse(in1, in2[2], int(float(in2[0])/dt), int(in2[1]), h, lags)
         PulseLength=float(in1.shape[0])*float(in2[0])
         LagSp=int(float(in2[0]))
         print ("LagSp",LagSp)
@@ -1396,8 +1412,9 @@ def compute_lamb(ltype,hfile,MCIC,in1,in2,outdir,lags=[]):
         name2=['Baudlength', 'OversamplingFactor', 'CodeLength']
         typedesc='MultiPulse'
         if len(lags)==0:
-            lags=range(in1.shape[0])    
-        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum, comp_all = dpulse(in1, in2[2], int(float(in2[0])/dt), int(in2[1]), h, lags)
+            lags=list(range(in1.shape[0]))
+        tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum, comp_all \
+                = dpulse(in1, in2[2], int(float(in2[0])/dt), int(in2[1]), h, lags)
         PulseLength=float(in1.shape[0])*float(in2[0])
         LagSp=int(float(in2[0]))
         print ("LagSp",LagSp)
@@ -1412,53 +1429,54 @@ def compute_lamb(ltype,hfile,MCIC,in1,in2,outdir,lags=[]):
     if saveOutput:
         try:
             outname=os.path.join(outdir,'AmbFuncFull.h5')
-            outh5file=tables.open_file(outname, mode = "w", title = "Ambiguity Function File")
-            write_outputfile(outh5file,tau.astype('float64')*1e-6,groupname='',name='Delay')
-            write_outputfile(outh5file,r.astype('float64')*v_lightspeed/2.0*1e-6,groupname='',name='Range')
-            if comp_all:
-                write_outputfile(outh5file,wttall,groupname='',name='WttAll')
-            write_outputfile(outh5file,wtt,groupname='',name='Wtt')
-            write_outputfile(outh5file,wlag,groupname='',name='Wlag')
-            write_outputfile(outh5file,wlagsum,groupname='',name='WlagSum') 
-            write_outputfile(outh5file,wrng,groupname='',name='Wrange')
-            write_outputfile(outh5file,wrngsum,groupname='',name='WrangeSum')   
-            write_outputfile(outh5file,in1,groupname='',name=name1)
-            for aa in range(len(in2)):
-                write_outputfile(outh5file,in2[aa],groupname='',name=name2[aa])
-            for aa in range(len(out1)):
-                write_outputfile(outh5file,out1[aa],groupname='',name=nameOut1[aa])
-            write_outputfile(outh5file,ltype,groupname='',name='Type')
-            write_outputfile(outh5file,typedesc,groupname='',name='TypeDesc')
-            write_outputfile(outh5file,hfile,groupname='',name='FilterFile')
-            write_outputfile(outh5file,scipy.asarray(MCIC),groupname='',name='MCIC')
-            write_outputfile(outh5file,dt*1e-6,groupname='',name='dt')
-            write_outputfile(outh5file,scipy.array(lags).astype('float64')*float(LagSp)*1e-6,groupname='',name='Lags')
-            write_outputfile(outh5file,PulseLength*1e-6,groupname='',name='PulseLength')
-            outh5file.close()
+            with tables.open_file(outname, mode = "w",
+                    title = "Ambiguity Function File") as fp:
+                write_outputfile(fp,tau.astype('float64')*1e-6,groupname='',name='Delay')
+                write_outputfile(fp,r.astype('float64')*v_lightspeed/2.0*1e-6,groupname='',name='Range')
+                if comp_all:
+                    write_outputfile(fp,wttall,groupname='',name='WttAll')
+                write_outputfile(fp,wtt,groupname='',name='Wtt')
+                write_outputfile(fp,wlag,groupname='',name='Wlag')
+                write_outputfile(fp,wlagsum,groupname='',name='WlagSum') 
+                write_outputfile(fp,wrng,groupname='',name='Wrange')
+                write_outputfile(fp,wrngsum,groupname='',name='WrangeSum')   
+                write_outputfile(fp,in1,groupname='',name=name1)
+                for aa in range(len(in2)):
+                    write_outputfile(fp,in2[aa],groupname='',name=name2[aa])
+                for aa in range(len(out1)):
+                    write_outputfile(fp,out1[aa],groupname='',name=nameOut1[aa])
+                write_outputfile(fp,ltype,groupname='',name='Type')
+                write_outputfile(fp,typedesc,groupname='',name='TypeDesc')
+                write_outputfile(fp,hfile,groupname='',name='FilterFile')
+                write_outputfile(fp,scipy.asarray(MCIC),groupname='',name='MCIC')
+                write_outputfile(fp,dt*1e-6,groupname='',name='dt')
+                write_outputfile(fp,scipy.array(lags).astype('float64')*float(LagSp)*1e-6,groupname='',name='Lags')
+                write_outputfile(fp,PulseLength*1e-6,groupname='',name='PulseLength')
         except:
             print ('unable to create ambfuncfull')
-            
+
         outname=os.path.join(outdir,'AmbFunc.h5')
-        outh5file=tables.open_file(outname, mode = "w", title = "Ambiguity Function File")
-        write_outputfile(outh5file,tau.astype('float64')*1e-6,groupname='',name='Delay')
-        write_outputfile(outh5file,r.astype('float64')*v_lightspeed/2.0*1e-6,groupname='',name='Range')
-        write_outputfile(outh5file,wlag,groupname='',name='Wlag')
-        write_outputfile(outh5file,wlagsum,groupname='',name='WlagSum') 
-        write_outputfile(outh5file,wrng,groupname='',name='Wrange')
-        write_outputfile(outh5file,wrngsum,groupname='',name='WrangeSum')   
-    #    write_outputfile(outh5file,in1,groupname='',name=name1)
-    #    for aa in range(len(in2)):
-    #        write_outputfile(outh5file,in2[aa],groupname='',name=name2[aa])
-        for aa in range(len(out1)):
-            write_outputfile(outh5file,out1[aa],groupname='',name=nameOut1[aa])
-    #    write_outputfile(outh5file,ltype,groupname='',name='Type')
-    #    write_outputfile(outh5file,ltypedesc,groupname='',name='TypeDesc')
-    #    write_outputfile(outh5file,hfile,groupname='',name='FilterFile')
-    #    write_outputfile(outh5file,MCIC,groupname='',name='MCIC')
-    #    write_outputfile(outh5file,dt*1e-6,groupname='',name='dt')
-        write_outputfile(outh5file,scipy.array(lags).astype('float64')*float(LagSp)*1e-6,groupname='',name='Lags')
-    #    write_outputfile(outh5file,PulseLength*1e-6,groupname='',name='PulseLength')
-        outh5file.close()
+        with tables.open_file(outname, mode = "w",
+                title = "Ambiguity Function File") as fp:
+
+            write_outputfile(fp,tau.astype('float64')*1e-6,groupname='',name='Delay')
+            write_outputfile(fp,r.astype('float64')*v_lightspeed/2.0*1e-6,groupname='',name='Range')
+            write_outputfile(fp,wlag,groupname='',name='Wlag')
+            write_outputfile(fp,wlagsum,groupname='',name='WlagSum') 
+            write_outputfile(fp,wrng,groupname='',name='Wrange')
+            write_outputfile(fp,wrngsum,groupname='',name='WrangeSum')   
+        #    write_outputfile(fp,in1,groupname='',name=name1)
+        #    for aa in range(len(in2)):
+        #        write_outputfile(fp,in2[aa],groupname='',name=name2[aa])
+            for aa in range(len(out1)):
+                write_outputfile(fp,out1[aa],groupname='',name=nameOut1[aa])
+        #    write_outputfile(fp,ltype,groupname='',name='Type')
+        #    write_outputfile(fp,ltypedesc,groupname='',name='TypeDesc')
+        #    write_outputfile(fp,hfile,groupname='',name='FilterFile')
+        #    write_outputfile(fp,MCIC,groupname='',name='MCIC')
+        #    write_outputfile(fp,dt*1e-6,groupname='',name='dt')
+            write_outputfile(fp,scipy.array(lags).astype('float64')*float(LagSp)*1e-6,groupname='',name='Lags')
+        #    write_outputfile(fp,PulseLength*1e-6,groupname='',name='PulseLength')
 
     
     # make plots    
