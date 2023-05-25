@@ -97,22 +97,22 @@ def a16rand():
     # Calculates randomized set of A16 codes, strong condition
     #
     # Octal
-    aoct = ['000','001','002','004','010','020','017','037','021','014','031','035','024','006','015','032']
-    a=[]
-    for ii in range(len(aoct)):
-        a.append(string.atoi(aoct[ii],8))
+    codes_oct = ['000','001','002','004','010','020','017','037','021','014','031','035','024','006','015','032']
+    codes=[]
+    for code in codes_oct:
+        codes.append(int(code,8))
 
     randomizer = [1,1,1,1,-1,-1,-1,1,-1,-1,1,-1,-1,1,-1,1]
-    
+
     a16code=scipy.zeros(32,dtype='float64')
     signs=scipy.zeros((32,16),dtype='float64')
     for jpul in range(32):
         codetmp = 0
         signstmp = []
-        for ibaud in range(16):
-            if randomizer[ibaud]*walsh(a[ibaud],jpul)==1:
+        for ibaud,(randomizer_i, code_i) in enumerate(zip(randomizer,codes)):
+            if randomizer_i*walsh(code_i,jpul)==1:
                 signstmp.append(1)
-                codetmp = codetmp + scipy.power(2,(15-ibaud))
+                codetmp = codetmp + scipy.power(2,(len(codes) - 1 - ibaud))
             else:
                 signstmp.append(-1)
         a16code[jpul] = codetmp
