@@ -37,9 +37,9 @@ def conv2d(a, b):
 def baudexpand(x, baud):
 
     if baud.size==1:
-        px = scipy.reshape(scipy.repeat(x[:,scipy.newaxis], baud, 0), (1,x.size*baud))
+        px = np.reshape(np.repeat(x[:,np.newaxis], int(baud), 0), (1,x.size*int(baud)))
     else:
-        px = scipy.reshape(baud*scipy.transpose(x), (1,x.size*baud.size))
+        px = np.reshape(baud*scipy.transpose(x), (1,x.size*baud.size))
         xxxx
         
     return px
@@ -816,24 +816,24 @@ def alt_code_fraclag(codeset, baud, fraction, h, lags):
             sc=scipy.repeat(sc[:,scipy.newaxis],nx,axis=1)
             decodeset[range(0,newcodeset.shape[0]-bb*fraction,fraction),1+(bb-1)*nx:1+(bb)*nx,aa]=sc
             lagmat[1+(bb-1)*nx:1+(bb)*nx]=scipy.arange((bb-1)*fraction+(fraction-(fraction-1)),(bb-1)*fraction+(fraction+(fraction+1))-1)
-        
+
     codeset=newcodeset
-    baud=baud/fraction
-    
+    baud = baud // fraction
+
     [nbaud, scancount] = codeset.shape
-    baud=scipy.array(baud)
-    
+    baud = np.array(baud)
+
     cwta=[]
     for ii in range(scancount):
         env=scipy.squeeze(scipy.fliplr(baudexpand(codeset[:,ii], baud)))
         cwta.append(scipy.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype='float64'))
-    
+
         for tau in range(h.shape[0]):
             cwta[ii][tau,tau:tau+env.shape[0]] = h[tau]*env
 
-    wtt=scipy.zeros((baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0]),dtype='float64')
-    wlag=scipy.zeros((len(lags),baud*len(lags)+2*h.shape[0]),dtype='float32')
-    wrng=scipy.zeros((len(lags),env.shape[0]+h.shape[0]),dtype='float32')    
+    wtt = np.zeros(( baud * len(lags) + 2 * h.shape[0], env.shape[0] + h.shape[0]), dtype='float64')
+    wlag = np.zeros((len(lags), baud*len(lags)+2*h.shape[0]),dtype='float32')
+    wrng = np.zeros((len(lags),env.shape[0]+h.shape[0]),dtype='float32')
     try:
         forgetit
         wttall=scipy.zeros((len(lags),baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0],nbaud),dtype='float32')
