@@ -10,15 +10,17 @@ last revised: xx/xx/2007
 
 import sys
 import os.path
+import h5py # importing to avoid weird matplotlib interference with tables
 import tables
 import numpy as np
 import scipy, scipy.fftpack
 import scipy.io
 import glob
-import matplotlib
+#import matplotlib
 #matplotlib.use('TkAgg'); matplotlib.interactive(True)
-matplotlib.use('Agg');# matplotlib.interactive(True)
-import pylab
+#matplotlib.use('Agg');# matplotlib.interactive(True)
+import matplotlib.pyplot as plt
+#import pylab
 import string
 
 ##############################
@@ -1118,97 +1120,99 @@ def plot_lamb(x,y,wtt,wttall,wlag,wrng,plotall=1,plotson=0,plotdir='',lags=[]):
     
     #xxx
 
-    figg=pylab.figure(figsize=figsize)
+    fig = plt.figure(num=1,figsize=figsize)
     if not iscomplex:
-        pylab.plot(x,np.transpose(wlag))
-        ax=pylab.gca()
+        ax = fig.add_axes(111)
+        ax.plot(x,np.transpose(wlag))
         ax.set_ylabel('Scaling', fontsize=labsize)
         ax.set_xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
         ax.set_title('Lag Ambiguity Function', fontsize=labsize, horizontalalignment='center')
     else:
-        pylab.subplot(221)
-        pylab.plot(x,np.transpose(wlag.real))
-        pylab.ylabel("Real", fontsize=labsize)
-        pylab.title('Lag Ambiguity Function', fontsize=labsize, horizontalalignment='center')
-        pylab.subplot(222)
-        pylab.plot(x,np.transpose(wlag.imag))
-        pylab.title('Lag Ambiguity Function', fontsize=labsize, horizontalalignment='center')
-        pylab.ylabel("Imag", fontsize=labsize)
-        pylab.subplot(223)
-        pylab.plot(x,np.transpose(np.absolute(wlag)))
-        pylab.xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
-        pylab.ylabel("Magitude", fontsize=labsize)
-        pylab.subplot(224)
-        pylab.plot(x,np.transpose((np.arctan2(wlag.imag,wlag.real))))
-        pylab.xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
-        pylab.ylabel("Phase", fontsize=labsize)
+        ax = fig.add_axes(221)
+        ax.plot(x,np.transpose(wlag.real))
+        ax.set_ylabel("Real", fontsize=labsize)
+        ax.set_title('Lag Ambiguity Function', fontsize=labsize, horizontalalignment='center')
+        ax = fig.add_axes(222)
+        ax.plot(x,np.transpose(wlag.imag))
+        ax.set_title('Lag Ambiguity Function', fontsize=labsize, horizontalalignment='center')
+        ax.set_ylabel("Imag", fontsize=labsize)
+        ax = fig.add_axes(223)
+        ax.plot(x,np.transpose(np.absolute(wlag)))
+        ax.set_xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
+        ax.set_ylabel("Magitude", fontsize=labsize)
+        ax = fig.add_axes(224)
+        ax.plot(x,np.transpose((np.arctan2(wlag.imag,wlag.real))))
+        ax.set_xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
+        ax.set_ylabel("Phase", fontsize=labsize)
     if plotson:
         oname='wlag.png'
-        figg.savefig(os.path.join(plotdir,oname))
+        fullname =  os.path.join(plotdir,oname)
+        print(f"Saving fig: {fullname}")
+        fig.savefig(fullname)
 
-    figg=pylab.figure(figsize=figsize)
-    if not iscomplex:    
-        pylab.plot(y,np.transpose(wrng))
-        ax=pylab.gca()
+    fig = plt.figure(num=2, figsize=figsize)
+    if not iscomplex:
+        ax = fig.add_axes(111)
+        ax.plot(y,np.transpose(wrng))
         ax.set_ylabel('Scaling', fontsize=labsize)
         ax.set_xlabel(r"$Range \ (\mu s)$", fontsize=labsize)
         ax.set_title('Range Ambiguity Function', fontsize=labsize, horizontalalignment='center')
     else:
-        pylab.subplot(221)
-        pylab.plot(y,np.transpose(wrng.real))
-        pylab.ylabel("Real", fontsize=labsize)
-        pylab.title('Range Ambiguity Function', fontsize=labsize, horizontalalignment='center')
-        pylab.subplot(222)
-        pylab.plot(y,np.transpose(wrng.imag))
-        pylab.title('Range Ambiguity Function', fontsize=labsize, horizontalalignment='center')
-        pylab.ylabel("Imag", fontsize=labsize)
-        pylab.subplot(223)
-        pylab.plot(y,np.transpose(np.absolute(wrng)))
-        pylab.xlabel(r"$Range \ (\mu s)$", fontsize=labsize)
-        pylab.ylabel("Magitude", fontsize=labsize)
-        pylab.subplot(224)
-        pylab.plot(y,np.transpose((np.arctan2(wrng.imag,wrng.real))))
-        pylab.xlabel(r"$Range \ (\mu s)$", fontsize=labsize)
-        pylab.ylabel("Phase", fontsize=labsize)
+        ax = fig.add_axes(221)
+        ax.plot(y,np.transpose(wrng.real))
+        ax.set_ylabel("Real", fontsize=labsize)
+        ax.set_title('Range Ambiguity Function', fontsize=labsize, horizontalalignment='center')
+        ax = fig.add_axes(222)
+        ax.plot(y,np.transpose(wrng.imag))
+        ax.set_title('Range Ambiguity Function', fontsize=labsize, horizontalalignment='center')
+        ax.set_ylabel("Imag", fontsize=labsize)
+        ax = fig.add_axes(223)
+        ax.plot(y,np.transpose(np.absolute(wrng)))
+        ax.set_xlabel(r"$Range \ (\mu s)$", fontsize=labsize)
+        ax.set_ylabel("Magitude", fontsize=labsize)
+        ax = fig.add_axes(224)
+        ax.plot(y,np.transpose((np.arctan2(wrng.imag,wrng.real))))
+        ax.set_xlabel(r"$Range \ (\mu s)$", fontsize=labsize)
+        ax.set_ylabel("Phase", fontsize=labsize)
     if plotson:
         oname='wrng.png'
-        figg.savefig(os.path.join(plotdir,oname))
+        fig.savefig(os.path.join(plotdir,oname))
     
-    figg=pylab.figure(figsize=figsize)
+    fig = plt.figure(num=3, figsize=figsize)
     if not iscomplex:
-        pylab.imshow(np.transpose(wtt),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()])
-        ax=pylab.gca()
+        ax = fig.add_axes(111)
+        pcm = ax.imshow(np.transpose(wtt),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()])
         ax.set_ylabel(r"$Range \ (\mu s)$", fontsize=labsize)
         ax.set_xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
         ax.set_title('Full 2d Ambiguity Function', fontsize=labsize, horizontalalignment='center')
-        pylab.colorbar()
+        fig.colorbar(pcm)
     else:
-        pylab.subplot(221)
-        pylab.imshow(np.transpose(wtt.real),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
-        pylab.colorbar()
-        pylab.title('Real', fontsize=labsize, horizontalalignment='center')
-        pylab.ylabel(r"$Range \ (\mu s)$", fontsize=labsize)                
-        pylab.subplot(222)
-        pylab.imshow(np.transpose(wtt.imag),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
-        pylab.colorbar()
-        pylab.title('Imag', fontsize=labsize, horizontalalignment='center')
-        pylab.subplot(223)
-        pylab.imshow(np.transpose(np.absolute(wtt)),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
-        pylab.colorbar()
-        pylab.title('Magnitude', fontsize=labsize, horizontalalignment='center')        
-        pylab.xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
-        pylab.ylabel(r"$Range \ (\mu s)$", fontsize=labsize)        
-        pylab.subplot(224)        
-        pylab.imshow(np.transpose(np.arctan2(wtt.imag,wtt.real)),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
-        pylab.colorbar()
-        pylab.title('Phase', fontsize=labsize, horizontalalignment='center')  
-        pylab.xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
+        ax = fig.add_axes(221)
+        pcm = ax.imshow(np.transpose(wtt.real),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
+        fig.colorbar(pcm)
+        ax.set_title('Real', fontsize=labsize, horizontalalignment='center')
+        ax.set_ylabel(r"$Range \ (\mu s)$", fontsize=labsize)                
+        ax = fig.add_axes(222)
+        pcm = ax.imshow(np.transpose(wtt.imag),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
+        fig.colorbar(pcm)
+        ax.set_title('Imag', fontsize=labsize, horizontalalignment='center')
+        ax = fig.add_axes(223)
+        pcm = ax.imshow(np.transpose(np.absolute(wtt)),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
+        fig.colorbar(pcm)
+        ax.set_title('Magnitude', fontsize=labsize, horizontalalignment='center')        
+        ax.set_xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
+        ax.set_ylabel(r"$Range \ (\mu s)$", fontsize=labsize)        
+        ax = fig.add_axes(224)
+        pcm = ax.imshow(np.transpose(np.arctan2(wtt.imag,wtt.real)),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
+        fig.colorbar(pcm)
+        ax.set_title('Phase', fontsize=labsize, horizontalalignment='center')  
+        ax.set_xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
               
     if plotson:
         oname='wtt.png'
-        figg.savefig(os.path.join(plotdir,oname))
+        fig.savefig(os.path.join(plotdir,oname))
     
-    pylab.show()
+    #pylab.show()
     
     if plotall:
         for aa in range(len(lags)):
