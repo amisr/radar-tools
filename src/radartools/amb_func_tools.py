@@ -6,6 +6,10 @@ xxxxx
 ~M. Nicolls
 last revised: xx/xx/2007
 
+5/26/2023 - P. Reyes
+            modified the code to work with python 3, and adding
+            the ACfl ambiguity function with phase correction
+
 """
 
 import sys
@@ -1512,3 +1516,63 @@ def compute_lamb(ltype,hfile,MCIC,in1,in2,outdir,lags=[]):
     plot_lamb(tau,r,wtt,wttall,wlag,wrng,plotson=1,plotdir=os.path.join(outdir,'plots'),plotall=comp_all,lags=lags)
     
     return tau,r,wttall,wtt,wlag,wrng
+
+
+def plot_complex_Wlag_Wrange(data,title, figname = ""):
+    if type(data) != dict:
+        data = data.contents_dict
+    fig,axs = plt.subplots(ncols = 4, nrows=2, figsize=(12,5.5),
+                           gridspec_kw=dict(hspace=0.4, wspace=0.7))
+    ax = axs[0][0]
+    pcm = ax.pcolormesh(data['/']['Lags']*1e3,data['/']['Delay']*1e3,data['/']['Wlag'].real.T)
+    ax.set_ylabel("Delay (ms)");ax.set_xlabel("Lags (ms)");ax.set_title("Wlag.real")
+    fig.colorbar(pcm)
+    ax = axs[0][1]
+    pcm = ax.pcolormesh(data['/']['Lags']*1e3,data['/']['Delay']*1e3,np.abs(data['/']['Wlag']).T)
+    ax.set_ylabel("Delay (ms)");ax.set_xlabel("Lags (ms)");ax.set_title("|Wlag|")
+    fig.colorbar(pcm)
+    ax = axs[0][2]
+    pcm = ax.pcolormesh(data['/']['Lags']*1e3,data['/']['Range']/1e3,data['/']['Wrange'].real.T)
+    ax.set_ylabel("Range (km)");ax.set_xlabel("Lags (ms)");ax.set_title("Wrange.real")
+    fig.colorbar(pcm)
+    ax = axs[0][3]
+    pcm = ax.pcolormesh(data['/']['Lags']*1e3,data['/']['Range']/1e3,np.abs(data['/']['Wrange']).T)
+    ax.set_ylabel("Range (km)");ax.set_xlabel("Lags (ms)");ax.set_title("|Wrange|")
+    fig.colorbar(pcm)
+    ax = axs[1][0]
+    pcm = ax.pcolormesh(data['/']['Lags']*1e3,data['/']['Delay']*1e3,data['/']['Wlag'].imag.T)
+    ax.set_ylabel("Delay (ms)");ax.set_xlabel("Lags (ms)");ax.set_title("Wlag.imag")
+    fig.colorbar(pcm)
+    ax = axs[1][1]
+    pcm = ax.pcolormesh(data['/']['Lags']*1e3,data['/']['Delay']*1e3,np.angle(data['/']['Wlag']).T,
+                       vmin = -np.pi, vmax = np.pi)
+    ax.set_ylabel("Delay (ms)");ax.set_xlabel("Lags (ms)");ax.set_title(r"$\angle$Wlag|")
+    fig.colorbar(pcm)
+    ax = axs[1][2]
+    pcm = ax.pcolormesh(data['/']['Lags']*1e3,data['/']['Range']/1e3,data['/']['Wrange'].imag.T)
+    ax.set_ylabel("Range (km)");ax.set_xlabel("Lags (ms)");ax.set_title("Wrange.imag")
+    fig.colorbar(pcm)
+    ax = axs[1][3]
+    pcm = ax.pcolormesh(data['/']['Lags']*1e3,data['/']['Range']/1e3,np.angle(data['/']['Wrange']).T,
+                       vmin = -np.pi, vmax = np.pi)
+    ax.set_ylabel("Range (km)");ax.set_xlabel("Lags (ms)");ax.set_title(r"$\angle$Wrange")
+    fig.colorbar(pcm)
+    fig.suptitle(title+f", #lags = {len(data['/']['Lags'])}")
+    if figname!="":
+        fig.savefig(figname,bbox_inches='tight')
+
+def plot_real_Wlag_Wrange(data,title, figname = ""):
+    if type(data) != dict:
+        data = data.contents_dict
+    fig,axs = plt.subplots(ncols=2,figsize=(6,2.5), gridspec_kw=dict(wspace=0.6,top=0.8))
+    ax = axs[0]
+    pcm = ax.pcolormesh(data['/']['Lags']*1e3,data['/']['Delay']*1e3,data['/']['Wlag'].T)
+    ax.set_ylabel("Delay (ms)");ax.set_xlabel("Lags (ms)");ax.set_title("Wlag")
+    fig.colorbar(pcm)
+    ax = axs[1]
+    pcm = ax.pcolormesh(data['/']['Lags']*1e3,data['/']['Range']/1e3,data['/']['Wrange'].T)
+    ax.set_ylabel("Range (km)");ax.set_xlabel("Lags (ms)");ax.set_title("Wrange")
+    fig.colorbar(pcm)
+    fig.suptitle(title+f", #lags = {len(data['/']['Lags'])}")
+    if figname!="":
+        fig.savefig(figname,bbox_inches='tight')
