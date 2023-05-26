@@ -887,7 +887,7 @@ def alt_code_fraclag(codeset, baud, fraction, h, lags, ph=''):
 
                 decode=decodeset[jj,iii,:]
 
-                wtmp = np.zeros(cwtt[0].shape)
+                wtmp = np.zeros(cwtt[0].shape, dtype=env.dtype)
                 for ii in range(scancount):
                     wtmp+=decode[ii]*cwtt[ii]
 
