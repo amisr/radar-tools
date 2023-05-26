@@ -39,7 +39,7 @@ def baudexpand(x, baud):
     if baud.size==1:
         px = np.reshape(np.repeat(x[:,np.newaxis], int(baud), 0), (1,x.size*int(baud)))
     else:
-        px = np.reshape(baud*scipy.transpose(x), (1,x.size*baud.size))
+        px = np.reshape(baud*np.transpose(x), (1,x.size*baud.size))
         xxxx
         
     return px
@@ -55,17 +55,17 @@ def a4():
         [1,1,-1,-1],
         [1,-1,-1,-1]]
         
-    return scipy.array(codeset)
+    return np.array(codeset)
     
 def code88():
     codec=[1,-2,1,-5,3,-1,2,-2,1,-1,2,-3,1,-2,2,-1,1,-1,4,-1,1,-1,1,-1,3,-6,1,-2,1,-1,1,-6,1,-1,2,-2,3,-3,1,-1,2,-2,3,-3,1,-1]
     
     code=[]
     for ii in range(len(codec)):
-        for jj in range(scipy.absolute(codec[ii])):
-            code.append(scipy.sign(codec[ii]))
+        for jj in range(np.absolute(codec[ii])):
+            code.append(np.sign(codec[ii]))
     
-    return scipy.array(code)
+    return np.array(code)
 
 
 def a2():
@@ -77,15 +77,15 @@ def a2():
     for ii in range(len(aoct)):
         a.append(string.atoi(aoct[ii],8))
     
-    a2code=scipy.zeros(2,dtype='float64')
-    signs=scipy.zeros((2,3),dtype='float64')
+    a2code=np.zeros(2,dtype='float64')
+    signs=np.zeros((2,3),dtype='float64')
     for jpul in range(2):
         codetmp = 0
         signstmp = []
         for ibaud in range(len(a)):
             if walsh(a[ibaud],jpul)==1:
                 signstmp.append(1)
-                codetmp = codetmp + scipy.power(2,(len(aoct)-1-ibaud))
+                codetmp = codetmp + np.power(2,(len(aoct)-1-ibaud))
             else:
                 signstmp.append(-1)
         a2code[jpul] = codetmp
@@ -105,15 +105,15 @@ def a16rand():
 
     randomizer = [1,1,1,1,-1,-1,-1,1,-1,-1,1,-1,-1,1,-1,1]
 
-    a16code=scipy.zeros(32,dtype='float64')
-    signs=scipy.zeros((32,16),dtype='float64')
+    a16code=np.zeros(32,dtype='float64')
+    signs=np.zeros((32,16),dtype='float64')
     for jpul in range(32):
         codetmp = 0
         signstmp = []
         for ibaud,(randomizer_i, code_i) in enumerate(zip(randomizer,codes)):
             if randomizer_i*walsh(code_i,jpul)==1:
                 signstmp.append(1)
-                codetmp = codetmp + scipy.power(2,(len(codes) - 1 - ibaud))
+                codetmp = codetmp + np.power(2,(len(codes) - 1 - ibaud))
             else:
                 signstmp.append(-1)
         a16code[jpul] = codetmp
@@ -132,15 +132,15 @@ def a8rand():
 
     randomizer = [1,-1,1,-1,1,-1,-1,1]
     
-    a16code=scipy.zeros(16,dtype='float64')
-    signs=scipy.zeros((16,8),dtype='float64')
+    a16code=np.zeros(16,dtype='float64')
+    signs=np.zeros((16,8),dtype='float64')
     for jpul in range(16):
         codetmp = 0
         signstmp = []
         for ibaud in range(8):
             if randomizer[ibaud]*walsh(a[ibaud],jpul)==1:
                 signstmp.append(1)
-                codetmp = codetmp + scipy.power(2,(7-ibaud))
+                codetmp = codetmp + np.power(2,(7-ibaud))
             else:
                 signstmp.append(-1)
         a16code[jpul] = codetmp
@@ -151,10 +151,10 @@ def a8rand():
 # walsh
 def walsh(i,j):
     # calculates elements of a walsh sign matrix for alternating codes
-    bita = scipy.bitwise_and(i,j)
+    bita = np.bitwise_and(i,j)
     s = 1
     for ibit in range(16):
-        if scipy.bitwise_and(bita,scipy.power(2,ibit))>0:
+        if np.bitwise_and(bita,np.power(2,ibit))>0:
             s = -s
     return s
 
@@ -197,7 +197,7 @@ def multipulse(gaps, pattern=[]):
         mp.append(1.0)
         for igap in range(len(gaps)):
             gap=gaps[igap]
-            mp.extend(scipy.zeros(gap).tolist())
+            mp.extend(np.zeros(gap).tolist())
             mp.append(1.0)
         
     else: # pattern is repeated without extra breaks
@@ -205,10 +205,10 @@ def multipulse(gaps, pattern=[]):
         leng = len(pattern)
         for igap in range(len(gaps)):
             gap=gaps[igap]
-            mp.extend(scipy.zeros(gap).tolist())
+            mp.extend(np.zeros(gap).tolist())
             mp.extend(pattern)
    
-    return scipy.array(mp)
+    return np.array(mp)
 
 # mpulse
 def dpulse(codeset, clen, baud, os, h, lags):
@@ -220,83 +220,83 @@ def dpulse(codeset, clen, baud, os, h, lags):
     # os - oversampling factor
     # h - impulse response function
 
-    baud=scipy.array(baud)
+    baud=np.array(baud)
     
     print (codeset)
     xxxxx
     
-    hbc=scipy.squeeze(scipy.fliplr(baudexpand(codeset, baud))) # this is the total impulse response of a Barker decoder with delta function impulse response
-    env=scipy.squeeze(baudexpand(multipulse(pattern,codeset),baud)) # pulse transmission envelope 
+    hbc=np.squeeze(np.fliplr(baudexpand(codeset, baud))) # this is the total impulse response of a Barker decoder with delta function impulse response
+    env=np.squeeze(baudexpand(multipulse(pattern,codeset),baud)) # pulse transmission envelope 
     
     # sampling of barker code
-    sc=scipy.zeros(hbc.shape,hbc.dtype)
+    sc=np.zeros(hbc.shape,hbc.dtype)
     sc[::baud/os]=1
     hbc=hbc*sc
 
     # delta function
-    hdelt=scipy.zeros(h.shape)
-    hdelt[scipy.floor(hdelt.shape[0]/2.0)]=1.0
+    hdelt=np.zeros(h.shape)
+    hdelt[np.floor(hdelt.shape[0]/2.0)]=1.0
         
     # to get the total impulse response, convolve filter impulse response with decoder
-    h=scipy.convolve(h,hbc)
-    hDelt=scipy.convolve(hdelt,hbc)
+    h=np.convolve(h,hbc)
+    hDelt=np.convolve(hdelt,hbc)
     
-    wta=scipy.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
-    wtaDelt=scipy.zeros((hDelt.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
+    wta=np.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
+    wtaDelt=np.zeros((hDelt.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
 
     for tau in range(h.shape[0]):
         wta[tau,tau:tau+env.shape[0]]=h[tau]*env
         wtaDelt[tau,tau:tau+env.shape[0]]=hDelt[tau]*env
 
-    mlag=scipy.array(lags).max()
+    mlag=np.array(lags).max()
 
-    wtt=scipy.zeros((baud*mlag+2*h.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
-    wlag=scipy.zeros((len(lags),baud*mlag+2*h.shape[0]),dtype='float32')
-    wrng=scipy.zeros((len(lags),env.shape[0]+h.shape[0]),dtype='float32')
+    wtt=np.zeros((baud*mlag+2*h.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
+    wlag=np.zeros((len(lags),baud*mlag+2*h.shape[0]),dtype='float32')
+    wrng=np.zeros((len(lags),env.shape[0]+h.shape[0]),dtype='float32')
     try:
-        wttall=scipy.zeros((len(lags),baud*mlag+2*h.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
+        wttall=np.zeros((len(lags),baud*mlag+2*h.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
         comp_all=1
     except:
         print ('Unable to allocate memory for full, 3D ambiguity function')
         comp_all=0
         wttall=[]
         
-    offs = scipy.arange(2*h.shape[0]-1)
+    offs = np.arange(2*h.shape[0]-1)
 
     for ii in range(len(lags)):
         lgind=lags[ii]
         lag = baud*lgind
         print ('Lag-%d' % (lag))
         if lgind==0:
-            tmp=scipy.transpose(conv2d(scipy.transpose(wta[:,lag:]), scipy.transpose(wta[:,0:])))
+            tmp=np.transpose(conv2d(np.transpose(wta[:,lag:]), np.transpose(wta[:,0:])))
         else:
-            tmp=scipy.transpose(conv2d(scipy.transpose(wta[:,lag:]), scipy.transpose(wta[:,0:-lag])))
+            tmp=np.transpose(conv2d(np.transpose(wta[:,lag:]), np.transpose(wta[:,0:-lag])))
         if comp_all:
             wttall[ii,lag+offs,lag:]=tmp
         else:
-            wlag[ii,lag+offs]=wlag[ii,lag+offs]+scipy.sum(tmp,axis=1)
-            wrng[ii,lag:]=wrng[ii,lag:]+scipy.sum(tmp,axis=0)
+            wlag[ii,lag+offs]=wlag[ii,lag+offs]+np.sum(tmp,axis=1)
+            wrng[ii,lag:]=wrng[ii,lag:]+np.sum(tmp,axis=0)
         tmp2=wtt[lag+offs,lag:]
-        I=scipy.where(tmp>tmp2)
+        I=np.where(tmp>tmp2)
         tmp2[I]=tmp[I]
         wtt[lag+offs,lag:]=tmp2
 
-    wttDelt=scipy.transpose(conv2d(scipy.transpose(wtaDelt), scipy.transpose(wtaDelt)))
-    fact=scipy.sum(scipy.sum(wttDelt))
+    wttDelt=np.transpose(conv2d(np.transpose(wtaDelt), np.transpose(wtaDelt)))
+    fact=np.sum(np.sum(wttDelt))
     
-    tau=scipy.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
-    r=scipy.arange(wtt.shape[1],dtype='float64')
+    tau=np.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
+    r=np.arange(wtt.shape[1],dtype='float64')
 
     wtt=wtt/fact #/(leng*leng*baud*os*os)
     wttall=wttall/fact #/(leng*leng*baud*os*os)
 
     # lag ambiguity function
-    wlag=scipy.sum(wttall,axis=2)
-    wlagsum=scipy.sum(wlag,axis=1)
+    wlag=np.sum(wttall,axis=2)
+    wlagsum=np.sum(wlag,axis=1)
     
     # range ambiguity function
-    wrng=scipy.sum(wttall,axis=1)
-    wrngsum=scipy.sum(wrng,axis=1)
+    wrng=np.sum(wttall,axis=1)
+    wrngsum=np.sum(wrng,axis=1)
 
     comp_all=1
 
@@ -313,83 +313,83 @@ def mpulse(codeset, pattern, baud, os, h, lags):
     # os - oversampling factor
     # h - impulse response function
 
-    baud=scipy.array(baud)
+    baud=np.array(baud)
     
     print (multipulse(pattern,codeset))
     print (os)
     
-    hbc=scipy.squeeze(scipy.fliplr(baudexpand(codeset, baud))) # this is the total impulse response of a Barker decoder with delta function impulse response
-    env=scipy.squeeze(baudexpand(multipulse(pattern,codeset),baud)) # pulse transmission envelope 
+    hbc=np.squeeze(np.fliplr(baudexpand(codeset, baud))) # this is the total impulse response of a Barker decoder with delta function impulse response
+    env=np.squeeze(baudexpand(multipulse(pattern,codeset),baud)) # pulse transmission envelope 
     
     # sampling of barker code
-    sc=scipy.zeros(hbc.shape,hbc.dtype)
+    sc=np.zeros(hbc.shape,hbc.dtype)
     sc[::baud/os]=1
     hbc=hbc*sc
 
     # delta function
-    hdelt=scipy.zeros(h.shape)
-    hdelt[scipy.floor(hdelt.shape[0]/2.0)]=1.0
+    hdelt=np.zeros(h.shape)
+    hdelt[np.floor(hdelt.shape[0]/2.0)]=1.0
         
     # to get the total impulse response, convolve filter impulse response with decoder
-    h=scipy.convolve(h,hbc)
-    hDelt=scipy.convolve(hdelt,hbc)
+    h=np.convolve(h,hbc)
+    hDelt=np.convolve(hdelt,hbc)
     
-    wta=scipy.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
-    wtaDelt=scipy.zeros((hDelt.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
+    wta=np.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
+    wtaDelt=np.zeros((hDelt.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
 
     for tau in range(h.shape[0]):
         wta[tau,tau:tau+env.shape[0]]=h[tau]*env
         wtaDelt[tau,tau:tau+env.shape[0]]=hDelt[tau]*env
 
-    mlag=scipy.array(lags).max()
+    mlag=np.array(lags).max()
 
-    wtt=scipy.zeros((baud*mlag+2*h.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
-    wlag=scipy.zeros((len(lags),baud*mlag+2*h.shape[0]),dtype='float32')
-    wrng=scipy.zeros((len(lags),env.shape[0]+h.shape[0]),dtype='float32')
+    wtt=np.zeros((baud*mlag+2*h.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
+    wlag=np.zeros((len(lags),baud*mlag+2*h.shape[0]),dtype='float32')
+    wrng=np.zeros((len(lags),env.shape[0]+h.shape[0]),dtype='float32')
     try:
-        wttall=scipy.zeros((len(lags),baud*mlag+2*h.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
+        wttall=np.zeros((len(lags),baud*mlag+2*h.shape[0],env.shape[0]+h.shape[0]),dtype='float32')
         comp_all=1
     except:
         print ('Unable to allocate memory for full, 3D ambiguity function')
         comp_all=0
         wttall=[]
         
-    offs = scipy.arange(2*h.shape[0]-1)
+    offs = np.arange(2*h.shape[0]-1)
 
     for ii in range(len(lags)):
         lgind=lags[ii]
         lag = baud*lgind
         print ('Lag-%d' % (lag))
         if lgind==0:
-            tmp=scipy.transpose(conv2d(scipy.transpose(wta[:,lag:]), scipy.transpose(wta[:,0:])))
+            tmp=np.transpose(conv2d(np.transpose(wta[:,lag:]), np.transpose(wta[:,0:])))
         else:
-            tmp=scipy.transpose(conv2d(scipy.transpose(wta[:,lag:]), scipy.transpose(wta[:,0:-lag])))
+            tmp=np.transpose(conv2d(np.transpose(wta[:,lag:]), np.transpose(wta[:,0:-lag])))
         if comp_all:
             wttall[ii,lag+offs,lag:]=tmp
         else:
-            wlag[ii,lag+offs]=wlag[ii,lag+offs]+scipy.sum(tmp,axis=1)
-            wrng[ii,lag:]=wrng[ii,lag:]+scipy.sum(tmp,axis=0)
+            wlag[ii,lag+offs]=wlag[ii,lag+offs]+np.sum(tmp,axis=1)
+            wrng[ii,lag:]=wrng[ii,lag:]+np.sum(tmp,axis=0)
         tmp2=wtt[lag+offs,lag:]
-        I=scipy.where(tmp>tmp2)
+        I=np.where(tmp>tmp2)
         tmp2[I]=tmp[I]
         wtt[lag+offs,lag:]=tmp2
 
-    wttDelt=scipy.transpose(conv2d(scipy.transpose(wtaDelt), scipy.transpose(wtaDelt)))
-    fact=scipy.sum(scipy.sum(wttDelt))
+    wttDelt=np.transpose(conv2d(np.transpose(wtaDelt), np.transpose(wtaDelt)))
+    fact=np.sum(np.sum(wttDelt))
     
-    tau=scipy.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
-    r=scipy.arange(wtt.shape[1],dtype='float64')
+    tau=np.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
+    r=np.arange(wtt.shape[1],dtype='float64')
 
     wtt=wtt/fact #/(leng*leng*baud*os*os)
     wttall=wttall/fact #/(leng*leng*baud*os*os)
 
     # lag ambiguity function
-    wlag=scipy.sum(wttall,axis=2)
-    wlagsum=scipy.sum(wlag,axis=1)
+    wlag=np.sum(wttall,axis=2)
+    wlagsum=np.sum(wlag,axis=1)
     
     # range ambiguity function
-    wrng=scipy.sum(wttall,axis=1)
-    wrngsum=scipy.sum(wrng,axis=1)
+    wrng=np.sum(wttall,axis=1)
+    wrngsum=np.sum(wrng,axis=1)
 
     comp_all=1
 
@@ -406,52 +406,52 @@ def coh_code(codeset, baud, os, h):
     # os - oversampling factor
     # h - impulse response function
 
-    baud=scipy.array(baud)
+    baud=np.array(baud)
 
-#    codeset=scipy.array(generate_barkercode(leng,opt=type)) # generate barker code
+#    codeset=np.array(generate_barkercode(leng,opt=type)) # generate barker code
     
-    hbc=scipy.squeeze(scipy.fliplr(baudexpand(codeset, baud))) # this is the total impulse response of a Barker decoder with delta function impulse response
-    env=scipy.flipud(hbc) # pulse transmission envelope 
+    hbc=np.squeeze(np.fliplr(baudexpand(codeset, baud))) # this is the total impulse response of a Barker decoder with delta function impulse response
+    env=np.flipud(hbc) # pulse transmission envelope 
     
     # sampling of barker code
-    sc=scipy.zeros(hbc.shape,hbc.dtype)
+    sc=np.zeros(hbc.shape,hbc.dtype)
     sc[::baud//os]=1
     hbc=hbc*sc
 
     # delta function
-    hdelt=scipy.zeros(h.shape)
-    hdelt[int(scipy.floor(hdelt.shape[0]/2.0))]=1.0
+    hdelt=np.zeros(h.shape)
+    hdelt[int(np.floor(hdelt.shape[0]/2.0))]=1.0
         
     # to get the total impulse response, convolve filter impulse response with decoder
-    h=scipy.convolve(h,hbc)
-    hDelt=scipy.convolve(hdelt,hbc)
+    h=np.convolve(h,hbc)
+    hDelt=np.convolve(hdelt,hbc)
 
-    wta=scipy.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype='float64')
-    wtaDelt=scipy.zeros((hDelt.shape[0],env.shape[0]+h.shape[0]),dtype='float64')
+    wta=np.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype='float64')
+    wtaDelt=np.zeros((hDelt.shape[0],env.shape[0]+h.shape[0]),dtype='float64')
 
     for tau in range(h.shape[0]):
         wta[tau,tau:tau+env.shape[0]]=h[tau]*env
         wtaDelt[tau,tau:tau+env.shape[0]]=hDelt[tau]*env
     
-    wtt=scipy.transpose(conv2d(scipy.transpose(wta), scipy.transpose(wta)))
-    wttall=wtt[scipy.newaxis,:,:]
+    wtt=np.transpose(conv2d(np.transpose(wta), np.transpose(wta)))
+    wttall=wtt[np.newaxis,:,:]
 
-    wttDelt=scipy.transpose(conv2d(scipy.transpose(wtaDelt), scipy.transpose(wtaDelt)))
-    fact=scipy.sum(scipy.sum(wttDelt))
+    wttDelt=np.transpose(conv2d(np.transpose(wtaDelt), np.transpose(wtaDelt)))
+    fact=np.sum(np.sum(wttDelt))
 
-    tau=scipy.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
-    r=scipy.arange(wtt.shape[1],dtype='float64')
+    tau=np.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
+    r=np.arange(wtt.shape[1],dtype='float64')
 
     wtt=wtt/fact #/(leng*leng*baud*os*os)
     wttall=wttall/fact #/(leng*leng*baud*os*os)
 
     # lag ambiguity function
-    wlag=scipy.sum(wttall,axis=2)
-    wlagsum=scipy.sum(wlag,axis=1)
+    wlag=np.sum(wttall,axis=2)
+    wlagsum=np.sum(wlag,axis=1)
     
     # range ambiguity function
-    wrng=scipy.sum(wttall,axis=1)
-    wrngsum=scipy.sum(wrng,axis=1)
+    wrng=np.sum(wttall,axis=1)
+    wrngsum=np.sum(wrng,axis=1)
 
     comp_all=1
 
@@ -470,86 +470,86 @@ def barker_code(leng, baud, os, h, Fs, btype=0):
     # Fs - nyquist
     # btype - in cases where there are two BCs
 
-    baud=scipy.array(baud)
+    baud=np.array(baud)
 
-    codeset=scipy.array(generate_barkercode(leng,opt=btype)) # generate barker code
+    codeset=np.array(generate_barkercode(leng,opt=btype)) # generate barker code
     
-    hbc=scipy.squeeze(scipy.fliplr(baudexpand(codeset, baud))) # this is the total impulse response of a Barker decoder with delta function impulse response
-    env=scipy.flipud(hbc) # pulse transmission envelope 
+    hbc=np.squeeze(np.fliplr(baudexpand(codeset, baud))) # this is the total impulse response of a Barker decoder with delta function impulse response
+    env=np.flipud(hbc) # pulse transmission envelope 
 
     """
     # messed up pulse (additional 30us on end of transmit pulse)
-    tcodeset=scipy.concatenate((codeset,scipy.ones(3)))  
-    env=scipy.squeeze(baudexpand(tcodeset, baud))
+    tcodeset=np.concatenate((codeset,np.ones(3)))  
+    env=np.squeeze(baudexpand(tcodeset, baud))
     """
     
     # sampling of barker code
-    sc=scipy.zeros(hbc.shape,hbc.dtype)
+    sc=np.zeros(hbc.shape,hbc.dtype)
     sc[::baud//os]=1
     hbc=hbc*sc/10.0
-    print (scipy.sum(hbc))
+    print (np.sum(hbc))
 
     # delta function
-    hdelt=scipy.zeros(h.shape)
-    hdelt[int(scipy.floor(hdelt.shape[0]/2.0))]=1.0
+    hdelt=np.zeros(h.shape)
+    hdelt[int(np.floor(hdelt.shape[0]/2.0))]=1.0
     
-    BWfilt=Fs*scipy.sum(h**2.0)/scipy.sum(h)**2.0
+    BWfilt=Fs*np.sum(h**2.0)/np.sum(h)**2.0
     print (BWfilt)
     
-    tpp=scipy.absolute(scipy.fftpack.fftshift(scipy.fftpack.fft(h)))**2.0
-    tf=scipy.linspace(-Fs,Fs,tpp.shape[0])
-    df=scipy.median(scipy.diff(tf))
+    tpp=np.absolute(scipy.fftpack.fftshift(scipy.fftpack.fft(h)))**2.0
+    tf=np.linspace(-Fs,Fs,tpp.shape[0])
+    df=np.median(np.diff(tf))
     
-#    BWfilt=0.5*df*scipy.sum(tpp)**2.0/scipy.sum(tpp**2.0)
+#    BWfilt=0.5*df*np.sum(tpp)**2.0/np.sum(tpp**2.0)
 #    print BWfilt
     
-#    pylab.plot(tf,10.0*scipy.log10(tpp/tpp.max()))        
+#    pylab.plot(tf,10.0*np.log10(tpp/tpp.max()))        
                   
     # to get the total impulse response, convolve filter impulse response with decoder
-    h=scipy.convolve(h,hbc)
-    hDelt=scipy.convolve(hdelt,hbc)
+    h=np.convolve(h,hbc)
+    hDelt=np.convolve(hdelt,hbc)
     
-    tp=scipy.absolute(scipy.fftpack.fftshift(scipy.fftpack.fft(h-scipy.mean(h))))**2.0
-    tf=scipy.linspace(-Fs,Fs,tp.shape[0])
-    df=scipy.median(scipy.diff(tf))
+    tp=np.absolute(scipy.fftpack.fftshift(scipy.fftpack.fft(h-np.mean(h))))**2.0
+    tf=np.linspace(-Fs,Fs,tp.shape[0])
+    df=np.median(np.diff(tf))
     
-    #pylab.plot(tf,10.0*scipy.log10(tp/tp.max()))
+    #pylab.plot(tf,10.0*np.log10(tp/tp.max()))
     #adssdaas
        
-    BW=Fs*scipy.sum(h**2.0)/scipy.sum(h)**2.0
+    BW=Fs*np.sum(h**2.0)/np.sum(h)**2.0
     print ("BW",BW)
 
-#    BWfilt=0.5*df*scipy.sum(tp)**2.0/scipy.sum(tp**2.0)
+#    BWfilt=0.5*df*np.sum(tp)**2.0/np.sum(tp**2.0)
 #    print BWfilt
 
 #    xxxx
     
-    wta=scipy.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype='float64')
-    wtaDelt=scipy.zeros((hDelt.shape[0],env.shape[0]+h.shape[0]),dtype='float64')
+    wta=np.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype='float64')
+    wtaDelt=np.zeros((hDelt.shape[0],env.shape[0]+h.shape[0]),dtype='float64')
 
     for tau in range(h.shape[0]):
         wta[tau,tau:tau+env.shape[0]]=h[tau]*env
         wtaDelt[tau,tau:tau+env.shape[0]]=hDelt[tau]*env
     
-    wtt=scipy.transpose(conv2d(scipy.transpose(wta), scipy.transpose(wta)))
-    wttall=wtt[scipy.newaxis,:,:]
+    wtt=np.transpose(conv2d(np.transpose(wta), np.transpose(wta)))
+    wttall=wtt[np.newaxis,:,:]
 
-    wttDelt=scipy.transpose(conv2d(scipy.transpose(wtaDelt), scipy.transpose(wtaDelt)))
-    fact=scipy.sum(scipy.sum(wttDelt))
+    wttDelt=np.transpose(conv2d(np.transpose(wtaDelt), np.transpose(wtaDelt)))
+    fact=np.sum(np.sum(wttDelt))
 
-    tau=scipy.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
-    r=scipy.arange(wtt.shape[1],dtype='float64')
+    tau=np.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
+    r=np.arange(wtt.shape[1],dtype='float64')
 
     wtt=wtt/fact #/(leng*leng*baud*os*os)
     wttall=wttall/fact #/(leng*leng*baud*os*os)
 
     # lag ambiguity function
-    wlag=scipy.sum(wttall,axis=2)
-    wlagsum=scipy.sum(wlag,axis=1)
+    wlag=np.sum(wttall,axis=2)
+    wlagsum=np.sum(wlag,axis=1)
     
     # range ambiguity function
-    wrng=scipy.sum(wttall,axis=1)
-    wrngsum=scipy.sum(wrng,axis=1)
+    wrng=np.sum(wttall,axis=1)
+    wrngsum=np.sum(wrng,axis=1)
 
     comp_all=1
 
@@ -566,7 +566,7 @@ def alt_code_phaserr(codeset, baud, h, lags):
     # lags - lags that will be computed, in units of baud
 
     [nbaud, scancount] = codeset.shape
-    baud=scipy.array(baud)
+    baud=np.array(baud)
 
     cwta=[]
     for ii in range(scancount):
@@ -574,26 +574,26 @@ def alt_code_phaserr(codeset, baud, h, lags):
         
         # introduce the errors
         env2=env.copy()
-        III=scipy.where(codeset[:,ii]==-1)[0]
+        III=np.where(codeset[:,ii]==-1)[0]
 #       print III
         for aa in range(len(III)):
             II=III[aa]
             env2[0,II*baud+2./3.*baud:(II+1)*baud]=1
-#       pylab.plot(scipy.squeeze(env2),'-r')
+#       pylab.plot(np.squeeze(env2),'-r')
 #       pylab.hold(1)
-#       pylab.plot(scipy.squeeze(env),'-k')
+#       pylab.plot(np.squeeze(env),'-k')
 #       xxx
-        env=scipy.squeeze(scipy.fliplr(env2))
+        env=np.squeeze(np.fliplr(env2))
         
-        cwta.append(scipy.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype='float64'))
+        cwta.append(np.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype='float64'))
     
         for tau in range(h.shape[0]):
             cwta[ii][tau,tau:tau+env.shape[0]] = h[tau]*env
 
-    wtt=scipy.zeros((baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0]),dtype='float64')
-    wttall=scipy.zeros((len(lags),baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0],nbaud),dtype='float32')
+    wtt=np.zeros((baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0]),dtype='float64')
+    wttall=np.zeros((len(lags),baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0],nbaud),dtype='float32')
 
-    offs = scipy.arange(2*h.shape[0]-1)
+    offs = np.arange(2*h.shape[0]-1)
 
     for iii in range(len(lags)):
         lgind=lags[iii]
@@ -602,61 +602,61 @@ def alt_code_phaserr(codeset, baud, h, lags):
             lag = baud*lgind;
             print ('Lag-%d' % (lag))
             if lgind==0:
-                tmp=scipy.transpose(conv2d(scipy.transpose(cwta[ii][:,lag:]), scipy.transpose(cwta[ii][:,0:])))
+                tmp=np.transpose(conv2d(np.transpose(cwta[ii][:,lag:]), np.transpose(cwta[ii][:,0:])))
                 wtt[offs,:]+=tmp
                 wttall[iii,offs,:,0] = wtt[offs,:]+tmp
             else:
-                tmp=scipy.transpose(conv2d(scipy.transpose(cwta[ii][:,lag:]), scipy.transpose(cwta[ii][:,0:-lag])))
+                tmp=np.transpose(conv2d(np.transpose(cwta[ii][:,lag:]), np.transpose(cwta[ii][:,0:-lag])))
             cwtt.append(tmp)
 
         if lgind != 0:
             # decode alt. codes
             for jj in range(nbaud-lgind):
                 decode = codeset[jj,:]*codeset[jj+lgind,:]
-                wtmp = scipy.zeros(cwtt[0].shape)
+                wtmp = np.zeros(cwtt[0].shape)
                 for ii in range(scancount):
                     wtmp+=decode[ii]*cwtt[ii]
 
                 # wtt contains the maximum value
                 wttall[iii,lag+offs,lag:,jj]=wtmp.copy()
                 tmp2=wtt[lag+offs,lag:]
-                I=scipy.where(wtmp>tmp2)
+                I=np.where(wtmp>tmp2)
                 tmp2[I]=wtmp[I]
                 wtt[lag+offs,lag:] = tmp2           
 
-    tau=scipy.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
-    r=scipy.arange(wtt.shape[1],dtype='float64')
+    tau=np.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
+    r=np.arange(wtt.shape[1],dtype='float64')
     
     wtt=wtt/(nbaud*scancount*baud)
     wttall=wttall/(nbaud*scancount*baud)
     
     # lag ambiguity function
-    wlag=scipy.sum(scipy.sum(wttall,axis=3),axis=2)
-    wlagsum=scipy.sum(wlag,axis=1)
+    wlag=np.sum(np.sum(wttall,axis=3),axis=2)
+    wlagsum=np.sum(wlag,axis=1)
         
-    tmp=scipy.zeros((wttall.shape[0],wttall.shape[1],wttall.shape[2]+baud*nbaud),dtype='float32')
+    tmp=np.zeros((wttall.shape[0],wttall.shape[1],wttall.shape[2]+baud*nbaud),dtype='float32')
     for ii in range(wttall.shape[3]):
-        tmp+=scipy.concatenate((scipy.zeros((wttall.shape[0],wttall.shape[1],ii*baud),dtype='float32'),wttall[:,:,:,ii],scipy.zeros((wttall.shape[0],wttall.shape[1],baud*nbaud-ii*baud),dtype='float32')),axis=2)  
+        tmp+=np.concatenate((np.zeros((wttall.shape[0],wttall.shape[1],ii*baud),dtype='float32'),wttall[:,:,:,ii],np.zeros((wttall.shape[0],wttall.shape[1],baud*nbaud-ii*baud),dtype='float32')),axis=2)  
 #       if ii==0:
-#           tmp+=scipy.concatenate((scipy.zeros((wttall.shape[0],wttall.shape[1],baud*nbaud),dtype='float32'),wttall[:,:,:,ii]),axis=2)
+#           tmp+=np.concatenate((np.zeros((wttall.shape[0],wttall.shape[1],baud*nbaud),dtype='float32'),wttall[:,:,:,ii]),axis=2)
 #       else:
-#           tmp+=scipy.concatenate((scipy.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype='float32'),wttall[:,:,:-baud*ii,ii]),axis=2)
+#           tmp+=np.concatenate((np.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype='float32'),wttall[:,:,:-baud*ii,ii]),axis=2)
     wttall=tmp
     
-    wtt=scipy.concatenate((wtt,scipy.zeros((wtt.shape[0],baud*nbaud),dtype='float32')),axis=1)
-    r=scipy.arange(wtt.shape[1],dtype='float64')
+    wtt=np.concatenate((wtt,np.zeros((wtt.shape[0],baud*nbaud),dtype='float32')),axis=1)
+    r=np.arange(wtt.shape[1],dtype='float64')
 
-#   tmp=scipy.zeros((wttall.shape[0],wttall.shape[1],wttall.shape[2]),dtype='float32')
+#   tmp=np.zeros((wttall.shape[0],wttall.shape[1],wttall.shape[2]),dtype='float32')
 #   for ii in range(wttall.shape[3]):
 #       if ii==0:
-#           tmp+=scipy.concatenate((scipy.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype='float32'),wttall[:,:,:,ii]),axis=2)
+#           tmp+=np.concatenate((np.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype='float32'),wttall[:,:,:,ii]),axis=2)
 #       else:
-#           tmp+=scipy.concatenate((scipy.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype='float32'),wttall[:,:,:-baud*ii,ii]),axis=2)
+#           tmp+=np.concatenate((np.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype='float32'),wttall[:,:,:-baud*ii,ii]),axis=2)
 #   wttall=tmp
 
     # range ambiguity function
-    wrng=scipy.sum(wttall,axis=1)
-    wrngsum=scipy.sum(wrng,axis=1)
+    wrng=np.sum(wttall,axis=1)
+    wrngsum=np.sum(wrng,axis=1)
     
     comp_all=1
     
@@ -676,19 +676,19 @@ def alt_code_fraclag_old(codeset, baud, fraction, h, lags):
 
     [nbaud, scancount] = codeset.shape
 
-    newcodeset=scipy.zeros((codeset.shape[0]*fraction,codeset.shape[1]))
+    newcodeset=np.zeros((codeset.shape[0]*fraction,codeset.shape[1]))
     for aa in range(codeset.shape[0]):
         newcodeset[aa*fraction:aa*fraction+fraction,:]=codeset[aa,:]
 
     nx=2*fraction-1
-    decodeset=scipy.zeros(((nbaud-1)*nx,(nbaud-1)*nx+1,newcodeset.shape[1]))
-    lagmat=scipy.zeros((nbaud-1)*nx+1)
+    decodeset=np.zeros(((nbaud-1)*nx,(nbaud-1)*nx+1,newcodeset.shape[1]))
+    lagmat=np.zeros((nbaud-1)*nx+1)
     for aa in range(decodeset.shape[2]):
         for bb in range(1,codeset.shape[0]):
             sc=codeset[bb:,aa]*codeset[:-bb,aa]
-            sc=scipy.repeat(sc[:,scipy.newaxis],nx,axis=1)
+            sc=np.repeat(sc[:,np.newaxis],nx,axis=1)
             decodeset[range(0,newcodeset.shape[0]-bb*fraction,fraction),1+(bb-1)*nx:1+(bb)*nx,aa]=sc
-            lagmat[1+(bb-1)*nx:1+(bb)*nx]=scipy.arange((bb-1)*fraction+(fraction-(fraction-1)),(bb-1)*fraction+(fraction+(fraction+1))-1)
+            lagmat[1+(bb-1)*nx:1+(bb)*nx]=np.arange((bb-1)*fraction+(fraction-(fraction-1)),(bb-1)*fraction+(fraction+(fraction+1))-1)
     
     lags=lagmat
     
@@ -696,21 +696,21 @@ def alt_code_fraclag_old(codeset, baud, fraction, h, lags):
     baud=baud/fraction
     
     [nbaud, scancount] = codeset.shape
-    baud=scipy.array(baud)
+    baud=np.array(baud)
     
     cwta=[]
     for ii in range(scancount):
-        env=scipy.squeeze(scipy.fliplr(baudexpand(codeset[:,ii], baud)))
-        cwta.append(scipy.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype='float64'))
+        env=np.squeeze(np.fliplr(baudexpand(codeset[:,ii], baud)))
+        cwta.append(np.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype='float64'))
     
         for tau in range(h.shape[0]):
             cwta[ii][tau,tau:tau+env.shape[0]] = h[tau]*env
 
-    wtt=scipy.zeros((baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0]),dtype='float64')
-    wlag=scipy.zeros((len(lags),baud*len(lags)+2*h.shape[0]),dtype='float32')
-    wrng=scipy.zeros((len(lags),env.shape[0]+h.shape[0]),dtype='float32')    
+    wtt=np.zeros((baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0]),dtype='float64')
+    wlag=np.zeros((len(lags),baud*len(lags)+2*h.shape[0]),dtype='float32')
+    wrng=np.zeros((len(lags),env.shape[0]+h.shape[0]),dtype='float32')    
     try:
-        wttall=scipy.zeros((len(lags),baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0],nbaud),dtype='float32')
+        wttall=np.zeros((len(lags),baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0],nbaud),dtype='float32')
         comp_all=1
     except:
         print ('Unable to allocate memory for full, 3D ambiguity function')
@@ -718,7 +718,7 @@ def alt_code_fraclag_old(codeset, baud, fraction, h, lags):
         wttall=[]
     comp_all=0
 
-    offs = scipy.arange(2*h.shape[0]-1)
+    offs = np.arange(2*h.shape[0]-1)
 
     for iii in range(lagmat.shape[0]):
         lgind=int(lagmat[iii])
@@ -728,15 +728,15 @@ def alt_code_fraclag_old(codeset, baud, fraction, h, lags):
             lag = baud*lgind;
             print ('Lag-%d' % (lag))
             if lgind==0:
-                tmp=scipy.transpose(conv2d(scipy.transpose(cwta[ii][:,lag:]), scipy.transpose(cwta[ii][:,0:])))
+                tmp=np.transpose(conv2d(np.transpose(cwta[ii][:,lag:]), np.transpose(cwta[ii][:,0:])))
                 wtt[offs,:]+=tmp
                 if comp_all:
                     wttall[ind2do,offs,:,0] = wtt[offs,:]+tmp
                 else:
-                    wlag[ind2do,lag+offs]=wlag[ind2do,lag+offs]+scipy.sum(tmp,axis=1)
-                    wrng[ind2do,lag:]=wrng[ind2do,lag:]+scipy.sum(tmp,axis=0)                    
+                    wlag[ind2do,lag+offs]=wlag[ind2do,lag+offs]+np.sum(tmp,axis=1)
+                    wrng[ind2do,lag:]=wrng[ind2do,lag:]+np.sum(tmp,axis=0)                    
             else:
-                tmp=scipy.transpose(conv2d(scipy.transpose(cwta[ii][:,lag:]), scipy.transpose(cwta[ii][:,0:-lag])))
+                tmp=np.transpose(conv2d(np.transpose(cwta[ii][:,lag:]), np.transpose(cwta[ii][:,0:-lag])))
             cwtt.append(tmp)
 
         if lgind != 0:
@@ -745,7 +745,7 @@ def alt_code_fraclag_old(codeset, baud, fraction, h, lags):
             
                 decode=decodeset[jj,iii,:]
                             
-                wtmp = scipy.zeros(cwtt[0].shape)
+                wtmp = np.zeros(cwtt[0].shape)
                 for ii in range(scancount):
                     wtmp+=decode[ii]*cwtt[ii]
 
@@ -753,38 +753,38 @@ def alt_code_fraclag_old(codeset, baud, fraction, h, lags):
                 if comp_all:
                     wttall[ind2do,lag+offs,lag:,jj]=wttall[ind2do,lag+offs,lag:,jj]+wtmp.copy()
                 else:
-                    wlag[ind2do,lag+offs]=wlag[ind2do,lag+offs]+scipy.sum(wtmp,axis=1)
-                    wrng[ind2do,lag:]=wrng[ind2do,lag:]+scipy.sum(wtmp,axis=0)
+                    wlag[ind2do,lag+offs]=wlag[ind2do,lag+offs]+np.sum(wtmp,axis=1)
+                    wrng[ind2do,lag:]=wrng[ind2do,lag:]+np.sum(wtmp,axis=0)
                 tmp2=wtt[lag+offs,lag:]
-                I=scipy.where(wtmp>tmp2)
+                I=np.where(wtmp>tmp2)
                 tmp2[I]=wtmp[I]
                 wtt[lag+offs,lag:] = tmp2           
 #           raw_input("Enter something: ")
 
-    tau=scipy.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
-    r=scipy.arange(wtt.shape[1],dtype='float64')
+    tau=np.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
+    r=np.arange(wtt.shape[1],dtype='float64')
     
     wtt=wtt/(nbaud*scancount*baud)
         
     if comp_all:
         wttall=wttall/(nbaud*scancount*baud)
-        tmp=scipy.zeros((wttall.shape[0],wttall.shape[1],wttall.shape[2]),dtype='float32')
+        tmp=np.zeros((wttall.shape[0],wttall.shape[1],wttall.shape[2]),dtype='float32')
         for ii in range(wttall.shape[3]):
             if ii==0:
-                tmp+=scipy.concatenate((scipy.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype='float32'),wttall[:,:,:,ii]),axis=2)
+                tmp+=np.concatenate((np.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype='float32'),wttall[:,:,:,ii]),axis=2)
             else:
-                tmp+=scipy.concatenate((scipy.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype='float32'),wttall[:,:,:-baud*ii,ii]),axis=2)
+                tmp+=np.concatenate((np.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype='float32'),wttall[:,:,:-baud*ii,ii]),axis=2)
         wttall=tmp
     
     # range and lag ambiguity function
     if comp_all:
-        wlag=scipy.sum(scipy.sum(wttall,axis=3),axis=2)
-        wrng=scipy.sum(wttall,axis=1)
+        wlag=np.sum(np.sum(wttall,axis=3),axis=2)
+        wrng=np.sum(wttall,axis=1)
     else:
         wlag=wlag/(nbaud*scancount*baud)
         wrng=wrng/(nbaud*scancount*baud)
-    wlagsum=scipy.sum(wlag,axis=1)
-    wrngsum=scipy.sum(wrng,axis=1)
+    wlagsum=np.sum(wlag,axis=1)
+    wrngsum=np.sum(wrng,axis=1)
     
     return tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum, comp_all, lags
 
@@ -838,24 +838,26 @@ def alt_code_fraclag(codeset, baud, fraction, h, lags, ph=''):
     cwta=[]
     for ii in range(scancount):
         env = envsc * np.squeeze(np.fliplr(baudexpand(codeset[:,ii], baud)))
-        cwta.append(np.zeros((h.shape[0], env.shape[0] + h.shape[0]), dtype='float64'))
+        cwta.append(np.zeros((h.shape[0], env.shape[0] + h.shape[0]), dtype=env.dtype))
 
         for tau in range(h.shape[0]):
             cwta[ii][tau,tau:tau+env.shape[0]] = h[tau]*env
 
-    wtt = np.zeros(( baud * len(lags) + 2 * h.shape[0], env.shape[0] + h.shape[0]), dtype='float64')
-    wlag = np.zeros((len(lags), baud*len(lags)+2*h.shape[0]),dtype='float32')
-    wrng = np.zeros((len(lags),env.shape[0]+h.shape[0]),dtype='float32')
+    wtt = np.zeros(( baud * len(lags) + 2 * h.shape[0], env.shape[0] + h.shape[0]),
+            dtype=env.dtype)
+    wlag = np.zeros((len(lags), baud*len(lags)+2*h.shape[0]),dtype=env.dtype)
+    wrng = np.zeros((len(lags),env.shape[0]+h.shape[0]),dtype=env.dtype)
     try:
         forgetit   # this is to break the code
-        wttall= np.zeros((len(lags),baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0],nbaud),dtype='float32')
+        wttall= np.zeros((len(lags),baud*len(lags)+2*h.shape[0],
+            env.shape[0]+h.shape[0],nbaud),dtype=env.dtype)
         comp_all=1
     except:
         print ('Unable to allocate memory for full, 3D ambiguity function')
         comp_all=0
         wttall=[]	
 
-    offs = scipy.arange(2*h.shape[0]-1)
+    offs = np.arange(2*h.shape[0]-1)
 
     for iii in range(lagmat.shape[0]):
         print(iii, "out of", lagmat.shape[0])
@@ -875,7 +877,7 @@ def alt_code_fraclag(codeset, baud, fraction, h, lags, ph=''):
                     wlag[lgind,lag+offs] = wlag[lgind, lag+offs] + np.sum(tmp,axis=1)
                     wrng[lgind,lag:] = wrng[lgind, lag:] + np.sum(tmp, axis=0)
             else:
-                tmp = np.transpose(conv2d(scipy.transpose(cwta[ii][:,lag:]),
+                tmp = np.transpose(conv2d(np.transpose(cwta[ii][:,lag:]),
                     np.transpose(cwta[ii][:,0:-lag])))
             cwtt.append(tmp)
 
@@ -893,8 +895,8 @@ def alt_code_fraclag(codeset, baud, fraction, h, lags, ph=''):
                 if comp_all:
                     wttall[lgind,lag+offs,lag:,jj]=wttall[lgind,lag+offs,lag:,jj]+wtmp.copy()
                 else:
-                    wlag[lgind,lag+offs] = wlag[lgind,lag+offs]+scipy.sum(wtmp,axis=1)
-                    wrng[lgind,lag:] = wrng[lgind,lag:]+scipy.sum(wtmp,axis=0)
+                    wlag[lgind,lag+offs] = wlag[lgind,lag+offs]+np.sum(wtmp,axis=1)
+                    wrng[lgind,lag:] = wrng[lgind,lag:]+np.sum(wtmp,axis=0)
                 tmp2=wtt[lag+offs,lag:]
                 I = np.where(wtmp > tmp2)
                 tmp2[I] = wtmp[I]
@@ -927,7 +929,7 @@ def alt_code_fraclag(codeset, baud, fraction, h, lags, ph=''):
     wlagsum = np.sum(wlag, axis=1)
     wrngsum = np.sum(wrng, axis=1)
     
-    lags = scipy.arange(lagmat.max()+1)
+    lags = np.arange(lagmat.max()+1)
 
     return tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum, comp_all, lags
 
@@ -943,28 +945,30 @@ def alt_code(codeset, baud, h, lags, ph=''):
     # lags - lags that will be computed, in units of baud
 
     [nbaud, scancount] = codeset.shape
-    baud=scipy.array(baud)
+    baud=np.array(baud)
 
     # pulse envelope
     if ph=='':
-        envsc=scipy.ones((nbaud*baud),dtype='float32')
+        envsc=np.ones((nbaud*baud),dtype='float32')
     else:
-        ph=scipy.array(scipy.loadtxt(ph))
-        envsc = scipy.ones((nbaud*baud),dtype='complex64')
-        envsc = scipy.absolute(envsc)*scipy.exp(1.0j*ph)
-    
+        ph=np.array(np.loadtxt(ph))
+        envsc = np.ones((nbaud*baud),dtype='complex64')
+        envsc = np.absolute(envsc)*np.exp(1.0j*ph)
+
     cwta=[]
-    for ii in range(scancount):        
-        env=envsc*scipy.squeeze(scipy.fliplr(baudexpand(codeset[:,ii], baud)))
-        cwta.append(scipy.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype=env.dtype))
-    
+    for ii in range(scancount):
+        env=envsc*np.squeeze(np.fliplr(baudexpand(codeset[:,ii], baud)))
+        cwta.append(np.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype=env.dtype))
+
         for tau in range(h.shape[0]):
             cwta[ii][tau,tau:tau+env.shape[0]] = h[tau]*env
 
-    wtt=scipy.zeros((baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0]),dtype=env.dtype)
-    wttall=scipy.zeros((len(lags),baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0],nbaud),dtype=env.dtype)
+    wtt = np.zeros((baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0]),
+            dtype=env.dtype)
+    wttall = np.zeros((len(lags),baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0],nbaud),
+            dtype=env.dtype)
 
-    offs = scipy.arange(2*h.shape[0]-1)
+    offs = np.arange(2*h.shape[0]-1)
 
     for iii in range(len(lags)):
         lgind=lags[iii]
@@ -973,49 +977,49 @@ def alt_code(codeset, baud, h, lags, ph=''):
             lag = baud*lgind;
             print ('Lag-%d' % (lag))
             if lgind==0:
-                tmp=scipy.transpose(conv2d(scipy.transpose(cwta[ii][:,lag:]), scipy.transpose(scipy.conj(cwta[ii][:,0:]))))
+                tmp=np.transpose(conv2d(np.transpose(cwta[ii][:,lag:]), np.transpose(np.conj(cwta[ii][:,0:]))))
                 wtt[offs,:]+=tmp
                 wttall[iii,offs,:,0] = wtt[offs,:]+tmp
             else:
-                tmp=scipy.transpose(conv2d(scipy.transpose(cwta[ii][:,lag:]), scipy.transpose(scipy.conj(cwta[ii][:,0:-lag]))))
+                tmp=np.transpose(conv2d(np.transpose(cwta[ii][:,lag:]), np.transpose(np.conj(cwta[ii][:,0:-lag]))))
             cwtt.append(tmp)
 
         if lgind != 0:
             # decode alt. codes
             for jj in range(nbaud-lgind):
                 decode = codeset[jj,:]*codeset[jj+lgind,:]
-                wtmp = scipy.zeros(cwtt[0].shape)
+                wtmp = np.zeros(cwtt[0].shape)
                 for ii in range(scancount):
                     wtmp+=decode[ii]*cwtt[ii]
 
                 # wtt contains the maximum value
                 wttall[iii,lag+offs,lag:,jj]=wtmp.copy()
                 tmp2=wtt[lag+offs,lag:]
-                I=scipy.where(scipy.absolute(wtmp)>scipy.absolute(tmp2))
+                I=np.where(np.absolute(wtmp)>np.absolute(tmp2))
                 tmp2[I]=wtmp[I]
                 wtt[lag+offs,lag:] = tmp2           
 
-    tau=scipy.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
-    r=scipy.arange(wtt.shape[1],dtype='float64')
+    tau=np.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
+    r=np.arange(wtt.shape[1],dtype='float64')
 
     wtt=wtt/(nbaud*scancount*baud)
     wttall=wttall/(nbaud*scancount*baud)
 
     # lag ambiguity function
-    wlag=scipy.sum(scipy.sum(wttall,axis=3),axis=2)
-    wlagsum=scipy.sum(wlag,axis=1)
+    wlag=np.sum(np.sum(wttall,axis=3),axis=2)
+    wlagsum=np.sum(wlag,axis=1)
 
-    tmp=scipy.zeros((wttall.shape[0],wttall.shape[1],wttall.shape[2]),dtype=env.dtype)
+    tmp=np.zeros((wttall.shape[0],wttall.shape[1],wttall.shape[2]),dtype=env.dtype)
     for ii in range(wttall.shape[3]):
         if ii==0:
-            tmp+=scipy.concatenate((scipy.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype=env.dtype),wttall[:,:,:,ii]),axis=2)
+            tmp+=np.concatenate((np.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype=env.dtype),wttall[:,:,:,ii]),axis=2)
         else:
-            tmp+=scipy.concatenate((scipy.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype=env.dtype),wttall[:,:,:-baud*ii,ii]),axis=2)
+            tmp+=np.concatenate((np.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype=env.dtype),wttall[:,:,:-baud*ii,ii]),axis=2)
     wttall=tmp
     
     # range ambiguity function
-    wrng=scipy.sum(wttall,axis=1)
-    wrngsum=scipy.sum(wrng,axis=1)
+    wrng=np.sum(wttall,axis=1)
+    wrngsum=np.sum(wrng,axis=1)
     
     comp_all=1
 
@@ -1033,63 +1037,63 @@ def long_pulse(nbaud, baud, h, lags, ph=''):
 
     # pulse envelope
     if ph=='':
-        env=scipy.ones((nbaud*baud),dtype='float32')
+        env=np.ones((nbaud*baud),dtype='float32')
     else:
-        ph=scipy.array(scipy.loadtxt(ph))
-        env=scipy.ones((nbaud*baud),dtype='complex64')
-        #env = scipy.absolute(env)*scipy.exp(1.0j*scipy.arange(480)*0.001)
-        env = scipy.absolute(env)*scipy.exp(1.0j*ph)
+        ph=np.array(np.loadtxt(ph))
+        env=np.ones((nbaud*baud),dtype='complex64')
+        #env = np.absolute(env)*np.exp(1.0j*np.arange(480)*0.001)
+        env = np.absolute(env)*np.exp(1.0j*ph)
     
-    wta=scipy.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype=env.dtype)
+    wta=np.zeros((h.shape[0],env.shape[0]+h.shape[0]),dtype=env.dtype)
 
     for tau in range(h.shape[0]):
         wta[tau,tau:tau+env.shape[0]]=h[tau]*env
     
-    wtt=scipy.zeros((baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0]),dtype=env.dtype)
-    wlag=scipy.zeros((len(lags),baud*len(lags)+2*h.shape[0]),dtype=env.dtype)
-    wrng=scipy.zeros((len(lags),env.shape[0]+h.shape[0]),dtype=env.dtype)
+    wtt=np.zeros((baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0]),dtype=env.dtype)
+    wlag=np.zeros((len(lags),baud*len(lags)+2*h.shape[0]),dtype=env.dtype)
+    wrng=np.zeros((len(lags),env.shape[0]+h.shape[0]),dtype=env.dtype)
     try:
-        wttall=scipy.zeros((len(lags),baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0]),dtype=env.dtype)
+        wttall=np.zeros((len(lags),baud*len(lags)+2*h.shape[0],env.shape[0]+h.shape[0]),dtype=env.dtype)
         comp_all=1
     except:
         print ('Unable to allocate memory for full, 3D ambiguity function')
         comp_all=0
         wttall=[]
 
-    offs = scipy.arange(2*h.shape[0]-1)
+    offs = np.arange(2*h.shape[0]-1)
 
     for ii in range(len(lags)):
         lgind=lags[ii]
         lag = baud*lgind
         print ('Lag-%d' % (lag))
         if lgind==0:
-            tmp=scipy.transpose(conv2d(scipy.transpose(wta[:,lag:]), scipy.transpose(scipy.conj(wta[:,0:]))))
+            tmp=np.transpose(conv2d(np.transpose(wta[:,lag:]), np.transpose(np.conj(wta[:,0:]))))
         else:
-            tmp=scipy.transpose(conv2d(scipy.transpose(wta[:,lag:]), scipy.transpose(scipy.conj(wta[:,0:-lag]))))
+            tmp=np.transpose(conv2d(np.transpose(wta[:,lag:]), np.transpose(np.conj(wta[:,0:-lag]))))
         if comp_all:
             wttall[ii,lag+offs,lag:]=tmp
         else:
-            wlag[ii,lag+offs]=wlag[ii,lag+offs]+scipy.sum(tmp,axis=1)
-            wrng[ii,lag:]=wrng[ii,lag:]+scipy.sum(tmp,axis=0)
+            wlag[ii,lag+offs]=wlag[ii,lag+offs]+np.sum(tmp,axis=1)
+            wrng[ii,lag:]=wrng[ii,lag:]+np.sum(tmp,axis=0)
         tmp2=wtt[lag+offs,lag:]
-        I=scipy.where(scipy.absolute(tmp)>scipy.absolute(tmp2))
+        I=np.where(np.absolute(tmp)>np.absolute(tmp2))
         tmp2[I]=tmp[I]
         wtt[lag+offs,lag:]=tmp2
 
-    tau=scipy.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
-    r=scipy.arange(wtt.shape[1],dtype='float64')
+    tau=np.arange(wtt.shape[0],dtype='float64')-h.shape[0]+1
+    r=np.arange(wtt.shape[1],dtype='float64')
     
     wtt=wtt/(nbaud*baud)
     if comp_all:
         wttall=wttall/(nbaud*baud)
-        wlag=scipy.sum(wttall,axis=2)
-        wrng=scipy.sum(wttall,axis=1)
+        wlag=np.sum(wttall,axis=2)
+        wrng=np.sum(wttall,axis=1)
     else:
         wlag=wlag/(nbaud*baud)
         wrng=wrng/(nbaud*baud)
     
-    wlagsum=scipy.sum(wlag,axis=1)
-    wrngsum=scipy.sum(wrng,axis=1)
+    wlagsum=np.sum(wlag,axis=1)
+    wrngsum=np.sum(wrng,axis=1)
     
     
     return tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum, comp_all
@@ -1110,32 +1114,32 @@ def plot_lamb(x,y,wtt,wttall,wlag,wrng,plotall=1,plotson=0,plotdir='',lags=[]):
  
     #print wlag
 
-    iscomplex = scipy.iscomplex(wlag).any()
+    iscomplex = np.iscomplex(wlag).any()
     
     #xxx
 
     figg=pylab.figure(figsize=figsize)
     if not iscomplex:
-        pylab.plot(x,scipy.transpose(wlag))
+        pylab.plot(x,np.transpose(wlag))
         ax=pylab.gca()
         ax.set_ylabel('Scaling', fontsize=labsize)
         ax.set_xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
         ax.set_title('Lag Ambiguity Function', fontsize=labsize, horizontalalignment='center')
     else:
         pylab.subplot(221)
-        pylab.plot(x,scipy.transpose(wlag.real))
+        pylab.plot(x,np.transpose(wlag.real))
         pylab.ylabel("Real", fontsize=labsize)
         pylab.title('Lag Ambiguity Function', fontsize=labsize, horizontalalignment='center')
         pylab.subplot(222)
-        pylab.plot(x,scipy.transpose(wlag.imag))
+        pylab.plot(x,np.transpose(wlag.imag))
         pylab.title('Lag Ambiguity Function', fontsize=labsize, horizontalalignment='center')
         pylab.ylabel("Imag", fontsize=labsize)
         pylab.subplot(223)
-        pylab.plot(x,scipy.transpose(scipy.absolute(wlag)))
+        pylab.plot(x,np.transpose(np.absolute(wlag)))
         pylab.xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
         pylab.ylabel("Magitude", fontsize=labsize)
         pylab.subplot(224)
-        pylab.plot(x,scipy.transpose((scipy.arctan2(wlag.imag,wlag.real))))
+        pylab.plot(x,np.transpose((np.arctan2(wlag.imag,wlag.real))))
         pylab.xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
         pylab.ylabel("Phase", fontsize=labsize)
     if plotson:
@@ -1144,26 +1148,26 @@ def plot_lamb(x,y,wtt,wttall,wlag,wrng,plotall=1,plotson=0,plotdir='',lags=[]):
 
     figg=pylab.figure(figsize=figsize)
     if not iscomplex:    
-        pylab.plot(y,scipy.transpose(wrng))
+        pylab.plot(y,np.transpose(wrng))
         ax=pylab.gca()
         ax.set_ylabel('Scaling', fontsize=labsize)
         ax.set_xlabel(r"$Range \ (\mu s)$", fontsize=labsize)
         ax.set_title('Range Ambiguity Function', fontsize=labsize, horizontalalignment='center')
     else:
         pylab.subplot(221)
-        pylab.plot(y,scipy.transpose(wrng.real))
+        pylab.plot(y,np.transpose(wrng.real))
         pylab.ylabel("Real", fontsize=labsize)
         pylab.title('Range Ambiguity Function', fontsize=labsize, horizontalalignment='center')
         pylab.subplot(222)
-        pylab.plot(y,scipy.transpose(wrng.imag))
+        pylab.plot(y,np.transpose(wrng.imag))
         pylab.title('Range Ambiguity Function', fontsize=labsize, horizontalalignment='center')
         pylab.ylabel("Imag", fontsize=labsize)
         pylab.subplot(223)
-        pylab.plot(y,scipy.transpose(scipy.absolute(wrng)))
+        pylab.plot(y,np.transpose(np.absolute(wrng)))
         pylab.xlabel(r"$Range \ (\mu s)$", fontsize=labsize)
         pylab.ylabel("Magitude", fontsize=labsize)
         pylab.subplot(224)
-        pylab.plot(y,scipy.transpose((scipy.arctan2(wrng.imag,wrng.real))))
+        pylab.plot(y,np.transpose((np.arctan2(wrng.imag,wrng.real))))
         pylab.xlabel(r"$Range \ (\mu s)$", fontsize=labsize)
         pylab.ylabel("Phase", fontsize=labsize)
     if plotson:
@@ -1172,7 +1176,7 @@ def plot_lamb(x,y,wtt,wttall,wlag,wrng,plotall=1,plotson=0,plotdir='',lags=[]):
     
     figg=pylab.figure(figsize=figsize)
     if not iscomplex:
-        pylab.imshow(scipy.transpose(wtt),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()])
+        pylab.imshow(np.transpose(wtt),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()])
         ax=pylab.gca()
         ax.set_ylabel(r"$Range \ (\mu s)$", fontsize=labsize)
         ax.set_xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
@@ -1180,22 +1184,22 @@ def plot_lamb(x,y,wtt,wttall,wlag,wrng,plotall=1,plotson=0,plotdir='',lags=[]):
         pylab.colorbar()
     else:
         pylab.subplot(221)
-        pylab.imshow(scipy.transpose(wtt.real),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
+        pylab.imshow(np.transpose(wtt.real),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
         pylab.colorbar()
         pylab.title('Real', fontsize=labsize, horizontalalignment='center')
         pylab.ylabel(r"$Range \ (\mu s)$", fontsize=labsize)                
         pylab.subplot(222)
-        pylab.imshow(scipy.transpose(wtt.imag),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
+        pylab.imshow(np.transpose(wtt.imag),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
         pylab.colorbar()
         pylab.title('Imag', fontsize=labsize, horizontalalignment='center')
         pylab.subplot(223)
-        pylab.imshow(scipy.transpose(scipy.absolute(wtt)),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
+        pylab.imshow(np.transpose(np.absolute(wtt)),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
         pylab.colorbar()
         pylab.title('Magnitude', fontsize=labsize, horizontalalignment='center')        
         pylab.xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
         pylab.ylabel(r"$Range \ (\mu s)$", fontsize=labsize)        
         pylab.subplot(224)        
-        pylab.imshow(scipy.transpose(scipy.arctan2(wtt.imag,wtt.real)),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
+        pylab.imshow(np.transpose(np.arctan2(wtt.imag,wtt.real)),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
         pylab.colorbar()
         pylab.title('Phase', fontsize=labsize, horizontalalignment='center')  
         pylab.xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
@@ -1215,7 +1219,7 @@ def plot_lamb(x,y,wtt,wttall,wlag,wrng,plotall=1,plotson=0,plotdir='',lags=[]):
             else:
                 lag=lags[aa]
             if not iscomplex:
-                pylab.imshow(scipy.transpose(wttall[aa,:,:]),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()])
+                pylab.imshow(np.transpose(wttall[aa,:,:]),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()])
                 ax=pylab.gca()
                 ax.set_ylabel(r"$Range \ (\mu s)$", fontsize=labsize)
                 ax.set_xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
@@ -1223,22 +1227,22 @@ def plot_lamb(x,y,wtt,wttall,wlag,wrng,plotall=1,plotson=0,plotdir='',lags=[]):
                 pylab.colorbar()
             else:
                 pylab.subplot(221)
-                pylab.imshow(scipy.transpose(wttall[aa,:,:].real),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
+                pylab.imshow(np.transpose(wttall[aa,:,:].real),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
                 pylab.colorbar()
                 pylab.title('Real, Lag %d' % (lag), fontsize=labsize, horizontalalignment='center')
                 pylab.ylabel(r"$Range \ (\mu s)$", fontsize=labsize)                    
                 pylab.subplot(222)
-                pylab.imshow(scipy.transpose(wttall[aa,:,:].imag),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
+                pylab.imshow(np.transpose(wttall[aa,:,:].imag),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
                 pylab.colorbar()
                 pylab.title('Imag, Lag %d' % (lag), fontsize=labsize, horizontalalignment='center')
                 pylab.subplot(223)
-                pylab.imshow(scipy.transpose(scipy.absolute(wttall[aa,:,:])),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
+                pylab.imshow(np.transpose(np.absolute(wttall[aa,:,:])),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
                 pylab.colorbar()
                 pylab.xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
                 pylab.ylabel(r"$Range \ (\mu s)$", fontsize=labsize)                    
                 pylab.title('Magnitude, Lag %d' % (lag), fontsize=labsize, horizontalalignment='center')
                 pylab.subplot(224)        
-                pylab.imshow(scipy.transpose(scipy.arctan2(wttall[aa,:,:].imag,wttall[aa,:,:].real)),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
+                pylab.imshow(np.transpose(np.arctan2(wttall[aa,:,:].imag,wttall[aa,:,:].real)),origin='lower',extent=[x.min(),x.max(),y.min(),y.max()],aspect='auto')
                 pylab.colorbar() 
                 pylab.title('Phase, Lag %d' % (lag), fontsize=labsize, horizontalalignment='center')
                 pylab.xlabel(r"$\tau \ (\mu s)$", fontsize=labsize)
@@ -1469,9 +1473,9 @@ def compute_lamb(ltype,hfile,MCIC,in1,in2,outdir,lags=[]):
                 write_outputfile(fp,ltype,groupname='',name='Type')
                 write_outputfile(fp,typedesc,groupname='',name='TypeDesc')
                 write_outputfile(fp,hfile,groupname='',name='FilterFile')
-                write_outputfile(fp,scipy.asarray(MCIC),groupname='',name='MCIC')
+                write_outputfile(fp,np.asarray(MCIC),groupname='',name='MCIC')
                 write_outputfile(fp,dt*1e-6,groupname='',name='dt')
-                write_outputfile(fp,scipy.array(lags).astype('float64')*float(LagSp)*1e-6,groupname='',name='Lags')
+                write_outputfile(fp,np.array(lags).astype('float64')*float(LagSp)*1e-6,groupname='',name='Lags')
                 write_outputfile(fp,PulseLength*1e-6,groupname='',name='PulseLength')
         except:
             print ('unable to create ambfuncfull')
@@ -1496,7 +1500,7 @@ def compute_lamb(ltype,hfile,MCIC,in1,in2,outdir,lags=[]):
         #    write_outputfile(fp,hfile,groupname='',name='FilterFile')
         #    write_outputfile(fp,MCIC,groupname='',name='MCIC')
         #    write_outputfile(fp,dt*1e-6,groupname='',name='dt')
-            write_outputfile(fp,scipy.array(lags).astype('float64')*float(LagSp)*1e-6,groupname='',name='Lags')
+            write_outputfile(fp,np.array(lags).astype('float64')*float(LagSp)*1e-6,groupname='',name='Lags')
         #    write_outputfile(fp,PulseLength*1e-6,groupname='',name='PulseLength')
 
     
