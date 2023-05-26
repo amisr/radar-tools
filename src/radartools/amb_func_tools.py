@@ -790,7 +790,7 @@ def alt_code_fraclag_old(codeset, baud, fraction, h, lags):
 
 
 # alt_code_fraclag
-def alt_code_fraclag(codeset, baud, fraction, h, lags):
+def alt_code_fraclag(codeset, baud, fraction, h, lags, ph=''):
     """
     computes an alternating code range-lag ambiguity function
 
@@ -799,6 +799,7 @@ def alt_code_fraclag(codeset, baud, fraction, h, lags):
     fraction - fractional lag
     h - impulse response function
     lags - lags that will be computed, in units of baud
+    ph - file with phase corrections
     """
 
     [nbaud, scancount] = codeset.shape
@@ -826,9 +827,17 @@ def alt_code_fraclag(codeset, baud, fraction, h, lags):
     [nbaud, scancount] = codeset.shape
     baud = np.array(baud)
 
+    # pulse envelope
+    if ph=='':
+        envsc = np.ones((nbaud*baud),dtype='float32')
+    else:
+        ph = np.array(np.loadtxt(ph))
+        envsc = np.ones((nbaud*baud), dtype='complex64')
+        envsc = np.absolute(envsc) * np.exp(1.0j*ph)
+
     cwta=[]
     for ii in range(scancount):
-        env = np.squeeze(np.fliplr(baudexpand(codeset[:,ii], baud)))
+        env = envsc * np.squeeze(np.fliplr(baudexpand(codeset[:,ii], baud)))
         cwta.append(np.zeros((h.shape[0], env.shape[0] + h.shape[0]), dtype='float64'))
 
         for tau in range(h.shape[0]):
@@ -899,12 +908,14 @@ def alt_code_fraclag(codeset, baud, fraction, h, lags):
 
     if comp_all:
         wttall = wttall // (nbaud*scancount*baud)
-        tmp = np.zeros((wttall.shape[0],wttall.shape[1],wttall.shape[2]),dtype='float32')
+        tmp = np.zeros((wttall.shape[0],wttall.shape[1],wttall.shape[2]),dtype=env.dtype)
         for ii in range(wttall.shape[3]):
             if ii==0:
-                tmp += np.concatenate((scipy.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype='float32'),wttall[:,:,:,ii]),axis=2)
+                tmp += np.concatenate((np.zeros((wttall.shape[0],wttall.shape[1],baud*ii),
+                    dtype=env.dtype),wttall[:,:,:,ii]),axis=2)
             else:
-                tmp += np.concatenate((scipy.zeros((wttall.shape[0],wttall.shape[1],baud*ii),dtype='float32'),wttall[:,:,:-baud*ii,ii]),axis=2)
+                tmp += np.concatenate((np.zeros((wttall.shape[0],wttall.shape[1],baud*ii),
+                    dtype=env.dtype),wttall[:,:,:-baud*ii,ii]),axis=2)
         wttall = tmp
     # range and lag ambiguity function
     if comp_all:
@@ -1369,8 +1380,12 @@ def compute_lamb(ltype,hfile,MCIC,in1,in2,outdir,lags=[]):
         typedesc = 'Fractional Lag Alternating Code'
         if len(lags) == 0:
             lags = list(range(in1.shape[0] * in2[1]))
+        if len(in2) == 2:
+            phFile = ''
+        elif len(in2) == 3:
+            phFile = in2[2]
         tau, r, wttall, wtt, wlag, wlagsum, wrng, wrngsum,comp_all,lags \
-                = alt_code_fraclag(in1, int(float(in2[0])/dt), in2[1], h, lags)
+                = alt_code_fraclag(in1, int(float(in2[0])/dt), in2[1], h, lags, ph=phFile)
         PulseLength=float(in1.shape[0])*float(in2[0])
         LagSp=int(float(in2[0])/in2[1])
     # Fractional Lag Alternating Code
