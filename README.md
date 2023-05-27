@@ -9,6 +9,7 @@ Clone this repo and:
 # Usage
 
 ## io_utils
+Used for reading the contents of any HDF5 file with tools for displaying a summary of its contents.
 Once installed in a python script or notebook:
 
     >>> from radartools import io_utils
@@ -24,6 +25,15 @@ Once installed in a python script or notebook:
       |__ WlagSum ........... complex128... (48,)...............      768 Bytes [0]=(0.290413+-0.0217599j) [-1]=(0.0196897+-0.00377615j)
       |__ Wrange ............ complex128... (48, 735)...........      551 kB
       |__ WrangeSum ......... complex128... (48,)...............      768 Bytes [0]=(0.290413+-0.0217599j) [-1]=(0.0196897+-0.00377615j)
+      
+To access the contents of the files you can access each item with dots. In Ipython or a notebook dot+TAB will suggest what items are available:
+    >>> f0.Wlag.shape
+     (48, 990)
+Another way to access the contents is from a dictionary
+    >>> f0.contents_dict.keys()
+     dict_keys(['/'])
+    >>> f0.contents_dict['/'].keys()
+      dict_keys(['Delay', 'Lags', 'Range', 'Wlag', 'WlagSum', 'Wrange', 'WrangeSum'])
       
 ## amb_func_tools
 See example in examples/acfl16_30_10_ph on how to generate AmbFunc.h5 for alternating codes with a phase correction file.
