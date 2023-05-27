@@ -54,8 +54,11 @@ class DotAccess:
             toexec = "{0}.{1} = __dummy__()".format(class0,element)
             exec(toexec)
 
-    def print_info(self):
-        print_info_dict(self.contents_dict)
+    def print_info(self,groupstodo=[],groupsnottodo=[],print_array=False,plotattrs=False,
+                    avoid_attrs=['CLASS','TITLE','VERSION']):
+        print_info_dict(self.contents_dict,groupstodo=groupstodo,
+                groupsnottodo=groupsnottodo,print_array=print_array,
+                plotattrs=plotattrs,avoid_attrs=avoid_attrs)
 
 class AArray(np.ndarray):
     """Array with attributes."""
