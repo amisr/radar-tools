@@ -40,11 +40,14 @@ class DotAccess:
         for key,val in file0.items():
             keys = key.split('/')
             keys[0] = 'self'
+            for key0 in keys:
+                key0 = key0.replace('.','_dot_') # replace names that have '.'
             for i,group in enumerate(keys[1:]):
                 if len(group)>0:
                     self.__add__('.'.join(keys[:i+1]),group)
 
             for key1,val2 in val.items():
+                key1 = key1.replace('.','_dot_') # replace names that have '.'
                 if len(keys[-1])>0:
                     exec("{0}.{1}=val2".format('.'.join(keys),key1))
                 else:
