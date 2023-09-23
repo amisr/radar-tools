@@ -1564,6 +1564,9 @@ def plot_complex_Wlag_Wrange(data,title, figname = ""):
 def plot_real_Wlag_Wrange(data,title, figname = ""):
     if type(data) != dict:
         data = data.contents_dict
+    else:
+        if '/' not in data.keys():
+            data = {'/':data}
     fig,axs = plt.subplots(ncols=2,figsize=(6,2.5), gridspec_kw=dict(wspace=0.6,top=0.8))
     ax = axs[0]
     pcm = ax.pcolormesh(data['/']['Lags']*1e3,data['/']['Delay']*1e3,data['/']['Wlag'].T)
