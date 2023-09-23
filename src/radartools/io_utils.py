@@ -60,6 +60,11 @@ class DotAccess:
                 groupsnottodo=groupsnottodo,print_array=print_array,
                 plotattrs=plotattrs,avoid_attrs=avoid_attrs)
 
+    def view_contents(self):
+        """Displays an interactive HTML-based html file contents.
+        """
+        view_contents(self.contents_dict)
+
 class AArray(np.ndarray):
     """Array with attributes."""
 
@@ -161,6 +166,8 @@ def read_partial_h5file(fname,groupstodo=[],groupsnottodo=[]):
 
     return DotAccess(output)
 
+def pt(vtype,nlen):
+    return vtype+(nlen-len(vtype))*'.'
 
 def print_info_dict(indata,groupstodo=[],groupsnottodo=[],print_array=False,plotattrs=False,
         avoid_attrs=['CLASS','TITLE','VERSION']):
@@ -170,8 +177,6 @@ def print_info_dict(indata,groupstodo=[],groupsnottodo=[],print_array=False,plot
     if not plotattrs:
         print("Default argument: plotattrs=False")
     import numpy as np
-    def pt(vtype,nlen):
-        return vtype+(nlen-len(vtype))*'.'
     def print_line(key1,vdtype,typelen,vshape,val):
         if val.nbytes > (1024.)**2:
             memstr = "%8.3g MB"%(val.nbytes/(1024.)**2)
@@ -283,6 +288,205 @@ def print_info_dict(indata,groupstodo=[],groupsnottodo=[],print_array=False,plot
                     print(4*" "+"|_",key2,(11-len(key2))*'.',val.attrs[key2])
 
 
+def view_contents(contents_dict):
+    from IPython.display import display, HTML
+    htmlbefore="""
+    <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    ul, #myUL {
+      list-style-type: none;
+    }
+
+    #myUL {
+      margin: 0;
+      padding: 0;
+    }
+
+    .caret {
+      cursor: pointer;
+      -webkit-user-select: none; /* Safari 3.1+ */
+      -moz-user-select: none; /* Firefox 2+ */
+      -ms-user-select: none; /* IE 10+ */
+      user-select: none;
+    }
+
+    .caret::before {
+      content: "►";
+      color: black;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    .caret-down::before {
+      -ms-transform: rotate(90deg); /* IE 9 */
+      -webkit-transform: rotate(90deg); /* Safari */'
+      transform: rotate(90deg);
+    }
+
+    .nested {
+      display: none;
+    }
+
+    .active {
+      display: block;
+    }
+    </style>
+    </head>
+    <body>
+
+    <ul id="myUL">
+    """
+    htmlafter="""
+    </ul>
+
+    <script>
+    var toggler = document.getElementsByClassName("caret");
+    var i;
+
+    for (i = 0; i < toggler.length; i++) {
+      toggler[i].addEventListener("click", function() {
+        this.parentElement.querySelector(".nested").classList.toggle("active");
+        this.classList.toggle("caret-down");
+      });
+    }
+    </script>
+
+    </body>
+    """
+
+    def print_line(key1,vdtype,typelen,vshape,val):
+        if val.nbytes > (1024.)**2:
+            memstr = "%8.3g MB"%(val.nbytes/(1024.)**2)
+        elif val.nbytes > 1024.:
+            memstr = "%8.3g kB"%(val.nbytes/1024.)
+        else:
+            memstr = "%8.3g Bytes"%(val.nbytes)
+
+        print_1val = False
+        if val.nbytes <= 16:
+            print_1val = True
+        if val.dtype.type == np.string_ :
+            if val.size == 1:
+                if val.item().find(b'\n')<0:
+                    print_1val = True
+        if print_1val:
+            return " ".join([pt(vdtype,typelen),pt(vshape,20),memstr,val.__str__()])
+        else:
+            val_squeeze = val.squeeze()
+            if val_squeeze.shape.__len__() == 1:
+                try:
+                    if np.iscomplex(val_squeeze[0]):
+                        first_val = "[0]=(%g+%gj)"%(val_squeeze[0].real,
+                                val_squeeze[0].imag)
+                        last_val = "[-1]=(%g+%gj)"%(val_squeeze[-1].real,
+                                val_squeeze[-1].imag)
+                    else:
+                        first_val = "[0]=%g"%val_squeeze[0]
+                        last_val = "[-1]=%g"%val_squeeze[-1]
+                    return " ".join([pt(vdtype,typelen),pt(vshape,20),memstr,\
+                        first_val,last_val])
+                except:
+                    return " ".join([pt(vdtype,typelen),pt(vshape,20),memstr])
+            else:
+                return " ".join([pt(vdtype,typelen),pt(vshape,20),memstr])
+
+
+    typelen = 13
+    def update_vals(toupdate,val1):
+        for key2,val2 in val1.items():
+            vtype = type(val2)
+            vtypename = type(val2).__name__
+            if vtype in [np.ndarray,AArray]:
+                vshape = val2.shape.__str__()
+                vdtype = val2.dtype.name
+                line = print_line(key2,vdtype,typelen,vshape,val2)
+                toupdate.update({key2:line})
+            else:
+                print("Oh NO, vtype=",vtype)
+
+    print_dict = {}
+    for key1,val1 in contents_dict.items():
+        if len(val1.items()) == 0:
+            continue
+        levels = key1[1:].split("/")
+        if levels[0] not in print_dict.keys():
+            print_dict.update({levels[0]:{}})
+        if len(levels)>1 and levels[1] not in print_dict[levels[0]].keys():
+            print_dict[levels[0]].update({levels[1]:{}})
+        if len(levels)>2 and levels[2] not in print_dict[levels[0]][levels[1]].keys():
+            print_dict[levels[0]][levels[1]].update({levels[2]:{}})
+        if len(levels)>3 and levels[3] not in print_dict[levels[0]][levels[1]][levels[2]].keys():
+            print_dict[levels[0]][levels[1]][levels[2]].update({levels[3]:{}})
+        if len(levels)>4 and levels[4] not in print_dict[levels[0]][levels[1]][levels[2]][levels[3]].keys():
+            print_dict[levels[0]][levels[1]][levels[2]][levels[3]].update({levels[4]:{}})
+        if len(levels)>5 and levels[5] not in print_dict[levels[0]][levels[1]][levels[2]][levels[3]][levels[4]].keys():
+            print_dict[levels[0]][levels[1]][levels[2]][levels[3]][levels[4]].update({levels[5]:{}})
+
+        if len(levels) == 1:
+            update_vals(print_dict[levels[0]],val1)
+        elif len(levels) == 2:
+            update_vals(print_dict[levels[0]][levels[1]],val1)
+        elif len(levels) == 3:
+            update_vals(print_dict[levels[0]][levels[1]][levels[2]],val1)
+        elif len(levels) == 4:
+            update_vals(print_dict[levels[0]][levels[1]][levels[2]][levels[3]],val1)
+        elif len(levels) == 5:
+            update_vals(print_dict[levels[0]][levels[1]][levels[2]][levels[3]][levels[4]],val1)
+
+    out = htmlbefore
+    for key1,val1 in print_dict.items():
+        out += f"""<li><span class="caret">{key1}</span>\n"""
+        out +=  """  <ul class="nested" style="list-style-type: none">\n"""
+        for key2,val2 in val1.items():   
+            out += f"""    <li><span class="caret">{key2}</span>\n"""
+            out +=  """       <ul class="nested" style="list-style-type: none">\n"""
+            if type(val2) == dict:
+                for key3,val3 in val2.items():
+                    out += f"""    <li><span class="caret">{key3}</span>\n"""
+                    out +=  """       <ul class="nested" style="list-style-type: none">\n"""
+                    if type(val3) == dict:
+                        for key4,val4 in val3.items():
+                            out += f"""      <li><span class="caret">{key4}</span>\n"""
+                            out +=  """         <ul class="nested" style="list-style-type: none">\n"""
+                            if type(val4) == dict:
+                                for key5,val5 in val4.items():
+                                    out += f"""      <li><span class="caret">{key5}</span>\n"""
+                                    out +=  """         <ul class="nested" style="list-style-type: none">\n"""
+                                    if type(val5) == dict:
+                                        for key6,val6 in val5.items():
+                                            out += f"""      <li><span class="caret">{key6}</span>\n"""
+                                            out +=  """         <ul class="nested" style="list-style-type: none">\n"""
+                                            if type(val6) == dict:
+                                                pass
+                                            else:
+                                                out += f"""         <li>{val6}</li>\n"""
+                                            
+                                            out += """       </ul>\n"""
+                                            out += """     </li>\n"""
+                                    else:
+                                        out += f"""         <li>{val5}</li>\n"""
+                                    
+                                    out += """       </ul>\n"""
+                                    out += """     </li>\n"""
+                            else:
+                                out += f"""         <li>{val4}</li>\n"""
+                            
+                            out += """       </ul>\n"""
+                            out += """     </li>\n"""
+                    else:
+                        out += f"""         <li>{val3}</li>\n"""
+                    out += """           </ul>\n"""
+                    out += """       </li>\n"""
+            else:
+                out += f"""         <li>{val2}</li>\n"""
+            out += """       </ul>\n"""
+            out += """     </li>\n"""
+        out += """  </ul>\n"""
+        out += """</li>\n"""
+    out+= htmlafter
+
+    display(HTML(out))
 
 def write_outputfile(fhandle,dict2do,keys2do=[],groupname='',name='',grouploc='/'):
     # Tested with pytables 2.0.1
