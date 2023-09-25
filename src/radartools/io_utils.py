@@ -358,7 +358,11 @@ def view_contents(contents_dict):
     </body>
     """
 
-    def print_line(key1,vdtype,typelen,vshape,val):
+
+
+
+
+    def get_valinfo(key1,vdtype,typelen,vshape,val):
         if val.nbytes > (1024.)**2:
             memstr = "%8.3g MB"%(val.nbytes/(1024.)**2)
         elif val.nbytes > 1024.:
@@ -373,38 +377,62 @@ def view_contents(contents_dict):
             if val.size == 1:
                 if val.item().find(b'\n')<0:
                     print_1val = True
+        out_dict = {"type":vdtype,
+                   "shape":vshape,
+                   "size":memstr}
         if print_1val:
-            return " ".join([pt(vdtype,typelen),pt(vshape,20),memstr,val.__str__()])
+            out_dict.update({"value":val.__str__()})
         else:
             val_squeeze = val.squeeze()
+            first_val = val_squeeze.ravel()[0]
+            last_val = val_squeeze.ravel()[-1]
             if val_squeeze.shape.__len__() == 1:
-                try:
-                    if np.iscomplex(val_squeeze[0]):
-                        first_val = "[0]=(%g+%gj)"%(val_squeeze[0].real,
-                                val_squeeze[0].imag)
-                        last_val = "[-1]=(%g+%gj)"%(val_squeeze[-1].real,
-                                val_squeeze[-1].imag)
-                    else:
-                        first_val = "[0]=%g"%val_squeeze[0]
-                        last_val = "[-1]=%g"%val_squeeze[-1]
-                    return " ".join([pt(vdtype,typelen),pt(vshape,20),memstr,\
-                        first_val,last_val])
-                except:
-                    return " ".join([pt(vdtype,typelen),pt(vshape,20),memstr])
-            else:
-                return " ".join([pt(vdtype,typelen),pt(vshape,20),memstr])
+                str_indices0 = "[0]"
+                str_indices1 = "[-1]"
+            elif val_squeeze.shape.__len__() == 2:
+                str_indices0 = "[0][0]"
+                str_indices1 = "[-1][-1]"
+            elif val_squeeze.shape.__len__() == 3:
+                str_indices0 = "[0][0][0]"
+                str_indices1 = "[-1][-1][-1]"
+            elif val_squeeze.shape.__len__() >= 4:
+                str_indices0 = "[0][0]..[0]"
+                str_indices1 = "[-1][-1]..[-1]"
+            try:
+                if np.iscomplex(first_val):
+                    first_val_str = "%s = (%g+%gj)"%(str_indices0,first_val.real,
+                            first_val.imag)
+                    last_val_str = "%s = (%g+%gj)"%(str_indices1,last_val.real,
+                            last_val.imag)
+                else:
+                    first_val = "%s = %g"%(str_indices0,first_val)
+                    last_val = "%s = %g"%(str_indices1,last_val)
 
+                out_dict.update({"values":", ".join([first_val,last_val])})
+            except:
+                pass
+
+        if hasattr(val,'attributes'):
+            out_dict.update({"attributes":val.attributes})
+
+        return out_dict
 
     typelen = 13
-    def update_vals(toupdate,val1):
+
+    def update_vals(dict_0,levels,val1):
+        tmp_str = "dict_0"
+        for level in levels:
+            if level not in eval(tmp_str):
+                eval(tmp_str).update({level:{}})
+            tmp_str += f"['{level}']"
         for key2,val2 in val1.items():
             vtype = type(val2)
             vtypename = type(val2).__name__
             if vtype in [np.ndarray,AArray]:
                 vshape = val2.shape.__str__()
                 vdtype = val2.dtype.name
-                line = print_line(key2,vdtype,typelen,vshape,val2)
-                toupdate.update({key2:line})
+                val_info = get_valinfo(key2,vdtype,typelen,vshape,val2)
+                eval(tmp_str).update({key2:val_info})
             else:
                 print("Oh NO, vtype=",vtype)
 
@@ -413,81 +441,25 @@ def view_contents(contents_dict):
         if len(val1.items()) == 0:
             continue
         levels = key1[1:].split("/")
-        if levels[0] not in print_dict.keys():
-            print_dict.update({levels[0]:{}})
-        if len(levels)>1 and levels[1] not in print_dict[levels[0]].keys():
-            print_dict[levels[0]].update({levels[1]:{}})
-        if len(levels)>2 and levels[2] not in print_dict[levels[0]][levels[1]].keys():
-            print_dict[levels[0]][levels[1]].update({levels[2]:{}})
-        if len(levels)>3 and levels[3] not in print_dict[levels[0]][levels[1]][levels[2]].keys():
-            print_dict[levels[0]][levels[1]][levels[2]].update({levels[3]:{}})
-        if len(levels)>4 and levels[4] not in print_dict[levels[0]][levels[1]][levels[2]][levels[3]].keys():
-            print_dict[levels[0]][levels[1]][levels[2]][levels[3]].update({levels[4]:{}})
-        if len(levels)>5 and levels[5] not in print_dict[levels[0]][levels[1]][levels[2]][levels[3]][levels[4]].keys():
-            print_dict[levels[0]][levels[1]][levels[2]][levels[3]][levels[4]].update({levels[5]:{}})
+        update_vals(print_dict,levels,val1)
 
-        if len(levels) == 1:
-            update_vals(print_dict[levels[0]],val1)
-        elif len(levels) == 2:
-            update_vals(print_dict[levels[0]][levels[1]],val1)
-        elif len(levels) == 3:
-            update_vals(print_dict[levels[0]][levels[1]][levels[2]],val1)
-        elif len(levels) == 4:
-            update_vals(print_dict[levels[0]][levels[1]][levels[2]][levels[3]],val1)
-        elif len(levels) == 5:
-            update_vals(print_dict[levels[0]][levels[1]][levels[2]][levels[3]][levels[4]],val1)
+    def nested_out(dict_i):
+        out_i = ""
+        for key_i,val_i in dict_i.items():
+            if type(val_i) == dict:
+                out_i += f"""<li><span class="caret">{key_i}</span>\n"""
+                out_i +=  """  <ul class="nested" style="list-style-type: none">\n"""
+                out_i += nested_out(val_i)
+                out_i +=  """  </ul>\n"""
+                out_i +=  """</li>\n"""
+            else:
+                out_i += f"""<li>{key_i}: {val_i}</li>\n"""
+        return out_i
 
     out = htmlbefore
-    for key1,val1 in print_dict.items():
-        out += f"""<li><span class="caret">{key1}</span>\n"""
-        out +=  """  <ul class="nested" style="list-style-type: none">\n"""
-        for key2,val2 in val1.items():   
-            out += f"""    <li><span class="caret">{key2}</span>\n"""
-            out +=  """       <ul class="nested" style="list-style-type: none">\n"""
-            if type(val2) == dict:
-                for key3,val3 in val2.items():
-                    out += f"""    <li><span class="caret">{key3}</span>\n"""
-                    out +=  """       <ul class="nested" style="list-style-type: none">\n"""
-                    if type(val3) == dict:
-                        for key4,val4 in val3.items():
-                            out += f"""      <li><span class="caret">{key4}</span>\n"""
-                            out +=  """         <ul class="nested" style="list-style-type: none">\n"""
-                            if type(val4) == dict:
-                                for key5,val5 in val4.items():
-                                    out += f"""      <li><span class="caret">{key5}</span>\n"""
-                                    out +=  """         <ul class="nested" style="list-style-type: none">\n"""
-                                    if type(val5) == dict:
-                                        for key6,val6 in val5.items():
-                                            out += f"""      <li><span class="caret">{key6}</span>\n"""
-                                            out +=  """         <ul class="nested" style="list-style-type: none">\n"""
-                                            if type(val6) == dict:
-                                                pass
-                                            else:
-                                                out += f"""         <li>{val6}</li>\n"""
-                                            
-                                            out += """       </ul>\n"""
-                                            out += """     </li>\n"""
-                                    else:
-                                        out += f"""         <li>{val5}</li>\n"""
-                                    
-                                    out += """       </ul>\n"""
-                                    out += """     </li>\n"""
-                            else:
-                                out += f"""         <li>{val4}</li>\n"""
-                            
-                            out += """       </ul>\n"""
-                            out += """     </li>\n"""
-                    else:
-                        out += f"""         <li>{val3}</li>\n"""
-                    out += """           </ul>\n"""
-                    out += """       </li>\n"""
-            else:
-                out += f"""         <li>{val2}</li>\n"""
-            out += """       </ul>\n"""
-            out += """     </li>\n"""
-        out += """  </ul>\n"""
-        out += """</li>\n"""
-    out+= htmlafter
+    out += nested_out(print_dict)
+    out += htmlafter
+
 
     display(HTML(out))
 
